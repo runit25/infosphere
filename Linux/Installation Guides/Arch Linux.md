@@ -156,7 +156,7 @@ pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs ef
 Uncomment the `[multilib]` section in `/etc/pacman.conf`:
 ```shell
 [multilib]
-Include = /etc/pacman.d/mirrolist
+Include = /etc/pacman.d/mirrorlist
 ```
 
 ## Configure your system
