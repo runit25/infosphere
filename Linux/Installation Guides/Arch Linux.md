@@ -149,7 +149,7 @@ mount /dev/nvme0n1p1 /mnt/efi
 ### Install necessary packages
 (openssh) is optional, but be sure to install it if you're going to use (SSH)
 ```shell
-pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs efibootmgr mkinitcpio bash-completion dhcpcd iwd openssh opendoas nano
+pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs efibootmgr mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 
 #### Enable multilib (required by certain packages such as `steam`)
@@ -157,6 +157,9 @@ Uncomment the `[multilib]` section in `/etc/pacman.conf`:
 ```shell
 [multilib]
 Include = /etc/pacman.d/mirrorlist
+
+# refresh your package databases
+pacman -Syu
 ```
 
 ## Configure your system
@@ -285,24 +288,29 @@ options nvidia_drm modeset=1
 ```
 
 ### Root password
-#### Set the root password
+#### Set your root password
 ```shell
 passwd
 ```
 
 ### Add Linux User
 ```shell
-useradd -m -g users -G wheel,storage,power -s /bin/bash <user>
+useradd -m -G wheel,storage,power -s /bin/bash <user>
 passwd <user>
+```
+
+### opendoas (doas) allows you to run root Commands 
+```shell
 pacman -S opendoas
-EDITOR=nano /etc/doas.conf
+
+nano /etc/doas.conf
 # Allow <user> to execute root commands
 permit persist keepenv <user>
 ```
 
 ### (Optional) Setup a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
 ```shell
-nano .bashrc
+nano ~/.bashrc
 # sudo alias for opendoas
 alias sudo='doas'
 ```
