@@ -55,13 +55,13 @@ cfdisk /dev/nvme0n1
 # delete existing partition to make room for your new partition scheme
 select [ Delete ] 
 
-# Setup boot partition
+# Set up boot partition
 select [ New ] 
 
 Parition Size: 1G
 
 select [ Type ] "EFI System"
-# setup root partition
+# Set up root partition
 select [ New ] 
 
 Parition Size: accept default value
@@ -192,6 +192,19 @@ lsblk
 |              |         |    |        |    |       | /                     |
 ```
 
+#### (Optional) Set up 4G swap file
+
+```bash
+btrfs su cr /var/swap
+truncate -s 0 /var/swap/swapfile
+chattr +C /var/swap/swapfile
+chmod 600 /var/swap/swapfile
+dd if=/dev/zero of=/var/swap/swapfile bs=1G count=4 status=progress
+mkswap /var/swap/swapfile
+swapon /var/swap/swapfile
+echo "/var/swap/swapfile none swap defaults 0 0" >> /etc/fstab
+```
+
 ### Time zone
 #### Set your time zone
 Replace `Europe/London` with your respective timezone found in `/usr/share/zoneinfo`
@@ -308,11 +321,11 @@ nano /etc/doas.conf
 permit persist keepenv <user>
 ```
 
-### (Optional) Setup a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
+### (Optional) Set up a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
 ```shell
 nano ~/.bashrc
 # sudo alias for opendoas
-alias sudo='doas'
+alias sudo="doas"
 ```
 
 ### Boot loader
