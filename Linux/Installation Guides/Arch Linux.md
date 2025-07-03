@@ -108,7 +108,7 @@ select [ Write ]
 ### Encrypt the partition
 ```shell
 # Encrypt the root partition
-cryptsetup luksFormat --use-urandom -S 1 -s 512 -h sha512 -i 5000 /dev/nvme0n1p2
+cryptsetup luksFormat --type luks1 --use-urandom -S 1 -s 512 -h sha512 -i 5000 /dev/nvme0n1p2
 
 # Open the encrypted partition
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
