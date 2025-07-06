@@ -2,7 +2,7 @@
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes Secure Boot, BTRFS+Backup, LUKS+Base Install
+Installation includes Secure Boot, Limine Bootloader, BTRFS+Backup, LUKS+Base Install
 
 **Note:** substitute `/dev/nvme0nX` with your corrosponding drive (**Example:** "/dev/sda")
 
@@ -35,15 +35,17 @@ hwclock --systohc
 ```
 
 #### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen` and generate locale
-```diff
+```shell
 nano /etc/locale.gen
+```
 
+```diff
 -#en_GB.UTF-8 UTF-8
 +en_GB.UTF-8 UTF-8
 ```
 
 #### Regenerate locale file
-```
+```shell
 locale-gen
 ```
 
@@ -53,8 +55,6 @@ localectl set-locale LANG="en_GB.UTF-8"
 localectl set-locale LC_TIME="en_GB.UTF-8"
 localectl set-keymap uk
 ```
-
-
 
 ### Connect to the internet with Wi-Fi
 ```shell
@@ -71,7 +71,9 @@ ping archlinux.org
 #### Display your disks and partitions
 ```shell
 lsblk
+```
 
+```shell
 # example output:
 |NAME           | MAJ:MIN | RM | SIZE   | RO  | TYPE  | MOUNTPOINT |
 | ------------- | ------- | -- | ------ | --- | ----- | ---------- |
@@ -157,16 +159,16 @@ mount -o defaults,noatime,discard,ssd,subvol=.@snapshots /dev/mapper/lukspart /m
 # Create a FAT32 filesystem on the EFI system partition
 mkfs.fat -F32 /dev/nvme0n1p1
 
-# Create a mount point for the EFI system partition at /efi for compatibility with grub-install
-mkdir /mnt/efi
-mount /dev/nvme0n1p1 /mnt/efi
+# Create a mount point for the EFI system partition at /boot for compatibility with Limine
+mkdir /mnt/boot
+mount /dev/nvme0n1p1 /mnt/boot
 ```
 
 ## Arch Base Installation
 ### Install necessary packages
 (openssh) is optional, but be sure to install it if you're going to use (SSH)
 ```shell
-pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs efibootmgr mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 
 ## Configure your system
@@ -174,6 +176,7 @@ pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs ef
 ```shell
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
+
 ### Chroot into the system
 ```shell
 arch-chroot /mnt
@@ -182,12 +185,14 @@ arch-chroot /mnt
 #### By this point you should have the following partitions and logical volumes:
 ```shell
 lsblk
+```
 
+```shell
 # Expected output
 | NAME         | MAJ:MIN | RM | SIZE   | RO | TYPE  | MOUNTPOINT            |
 | ------------ | ------- | -- | ------ | -- | ----- | --------------------- |
 | nvme0n1      | 259:0   | 0  | 475.9G | 0  | disk  |                       |
-| ├─nvme0n1p1  | 259:5   | 0  | 1G     | 0  | part  | /efi                  |
+| ├─nvme0n1p1  | 259:5   | 0  | 1G     | 0  | part  | /boot                 |
 | ├─nvme0n1p2  | 259:6   | 0  | 464.9G | 0  | part  |                       |
 | ..└─lukspart | 254:0   | 0  | 464.9G | 0  | crypt | /.snapshots           |
 |              |         |    |        |    |       | /var/lib/docker       |
@@ -210,14 +215,15 @@ Note: This is a unique name used to identify your machine on a network
 ```shell
 nano /etc/hosts
 ```
-```
+
+```shell
 127.0.0.1 localhost
 ::1       localhost
 127.0.1.1 myhostname
 ```
 
 #### Set up 4G swap file
-```bash
+```shell
 btrfs su cr /var/swap
 truncate -s 0 /var/swap/swapfile
 chattr +C /var/swap/swapfile
@@ -239,7 +245,7 @@ BINARIES=(btrfsck)
 ```
 
 ### Recreate the initramfs image
-```
+```shell
 mkinitcpio -P
 ```
 
@@ -275,6 +281,7 @@ mkinitcpio -p linux
 ```shell
 pacman -S mesa
 ```
+
 ##### Nvidia Cards
 ```shell
 pacman -S nvidia nvidia-utils
@@ -317,83 +324,53 @@ nano ~/.bashrc
 alias sudo="doas"
 ```
 
-### Boot loader
+### Bootloader
 ```shell
-# Install GRUB
-pacman -S grub efibootmgr os-prober dosfstools mtools
-
-# Configure GRUB to allow booting from /boot on a LUKS2 encrypted partition
-nano /etc/default/grub
-GRUB_ENABLE_CRYPTODISK=y
-
-# Uncomment if you're duel-booting
-GRUB_DISABLE_OS_PROBER=false
+# Install limine
+pacman -S limine dosfstools mtools
 ```
 
-#### Set kernel parameter to unlock the BTRFS physical volume at boot using ```encrypt``` hook
+#### Copy Bootloader files
+```shell
+mkdir -p /boot/EFI/BOOT/
+cp -v /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
+ls /usr/share/limine
+```
+
+#### Set the kernel parameter to unlock the BTRFS physical volume at boot 
 UUID is the partition containing the LUKS container
 ```shell
 blkid
 ```
+
 ```shell
 /dev/nvme0n1p2: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="crypto_LUKS" PARTLABEL="Linux LUKS" PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
+
 ```shell
-nano /etc/default/grub
-```
-```shell
-# allow-discards is only for ssd to let trim work with encryption enabled
-GRUB_CMDLINE_LINUX="... cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart:allow-discards"
+nano /boot/limine.conf
 ```
 
-#### Install GRUB to the mounted ESP for UEFI booting
 ```shell
-grub-install --target=x86_64-efi --bootloader-id=ARCH --efi-directory=/efi --recheck
+# Designates 5 second timer until Limine automatically boots
+timeout: 5
+
+/Arch Linux (linux)
+    protocol: linux
+    path: boot():/vmlinuz-linux
+    # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
+    cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
+    module_path: boot():/initramfs-linux.img
+
+/Arch Linux (linux-fallback)
+    protocol: linux
+    path: boot():/vmlinuz-linux
+    # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
+    cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
+    module_path: boot():/initramfs-linux-fallback.img
 ```
 
-#### Generate GRUB's configuration file
-```
-grub-mkconfig -o /boot/grub/grub.cfg
-```
-
-### (recommended) Embed a keyfile in initramfs
-
-This is done to avoid having to enter your encryption passphrase twice (once for GRUB, once for initramfs.)
-
-#### Create a keyfile and add it to the LUKS key
-```shell
-mkdir /root/secrets && chmod 700 /root/secrets
-head -c 64 /dev/urandom > /root/secrets/crypto_keyfile.bin && chmod 600 /root/secrets/crypto_keyfile.bin
-cryptsetup -v luksAddKey -i 1 /dev/nvme0n1p2 /root/secrets/crypto_keyfile.bin
-```
-
-#### Add the keyfile to the initramfs image
-```shell
-nano /etc/mkinitcpio.conf
-```
-```shell
-FILES=(/root/secrets/crypto_keyfile.bin)
-```
-
-#### Recreate the initramfs image
-```shell
-mkinitcpio -P
-```
-
-#### Set kernel parameters to unlock the LUKS partition with the keyfile using ```encrypt``` hook
-```shell
-/etc/default/grub
-```
-```shell
-GRUB_CMDLINE_LINUX="... cryptkey=rootfs:/root/secrets/crypto_keyfile.bin"
-```
-
-#### Regenerate GRUB's configuration file
-```shell
-grub-mkconfig -o /boot/grub/grub.cfg
-```
-
-#### Restrict ```/boot``` permissions
+#### Restrict `/boot` permissions
 ```shell
 chmod 700 /boot
 ```
@@ -403,3 +380,4 @@ Congratulations the installation is now complete.
 # Exit choort and reboot
 exit
 reboot
+```
