@@ -14,45 +14,8 @@ Installation includes Secure Boot, Limine Bootloader, BTRFS+Backup, LUKS+Base In
 ls /sys/firmware/efi/efivars
 ```
 
-### Configuring Locales
-#### Enable Time Sync
+### Set locale keyboard
 ```shell
-timedatectl set-ntp true
-```
-
-#### Set your timezone
-```shell
-# Check available timezones
-timedatectl list-timezones
-
-# Example location output (Europe/London)
-timedatectl set-timezone Europe/London
-```
-
-#### Sync hardware clock
-```shell
-hwclock --systohc
-```
-
-#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen` and generate locale
-```shell
-nano /etc/locale.gen
-```
-
-```diff
--#en_GB.UTF-8 UTF-8
-+en_GB.UTF-8 UTF-8
-```
-
-#### Regenerate locale file
-```shell
-locale-gen
-```
-
-#### set locale language, time and keyboard
-```shell
-localectl set-locale LANG="en_GB.UTF-8"
-localectl set-locale LC_TIME="en_GB.UTF-8"
 localectl set-keymap uk
 ```
 
@@ -203,6 +166,48 @@ lsblk
 |              |         |    |        |    |       | /                     |
 ```
 
+### Configuring Locales
+#### Enable Time Sync
+```shell
+timedatectl set-ntp true
+```
+
+#### Set your timezone
+```shell
+# Check available timezones
+timedatectl list-timezones
+
+# Example location output (Europe/London)
+timedatectl set-timezone Europe/London
+```
+
+#### Sync hardware clock
+```shell
+hwclock --systohc
+```
+
+#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen` and generate locale
+```shell
+nano /etc/locale.gen
+```
+
+```diff
+-#en_GB.UTF-8 UTF-8
++en_GB.UTF-8 UTF-8
+```
+
+#### Regenerate locale file
+```shell
+locale-gen
+```
+
+#### set locale language, time and keyboard
+```shell
+localectl set-locale LANG="en_GB.UTF-8"
+localectl set-locale LC_TIME="en_GB.UTF-8"
+localectl set-keymap uk
+```
+
 ### Network configuration
 #### Create a hostname file
 ```shell
@@ -222,7 +227,7 @@ nano /etc/hosts
 127.0.1.1 myhostname
 ```
 
-#### Set up 4G swap file
+### Set up 4G swap file
 ```shell
 btrfs su cr /var/swap
 truncate -s 0 /var/swap/swapfile
