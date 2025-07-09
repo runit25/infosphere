@@ -105,16 +105,16 @@ umount /mnt
 
 #### Mount BTRFS Subvolumes
 ```shell
-mount -o defaults,noatime,discard,ssd,subvol=@ /dev/mapper/lukspart /mnt  
+mount -o defaults,noatime,ssd,subvol=@ /dev/mapper/lukspart /mnt  
 mkdir -p /mnt/{home,var/log,var/cache/pacman/pkg,var/lib/docker,tmp,.snapshots}
 
-# Discard and ssd options are exclusive for ssd disks only
-mount -o defaults,noatime,discard,ssd,subvol=@home /dev/mapper/lukspart /mnt/home
-mount -o defaults,noatime,discard,ssd,subvol=@tmp /dev/mapper/lukspart /mnt/tmp
-mount -o defaults,noatime,discard,ssd,subvol=@log /dev/mapper/lukspart /mnt/var/log
-mount -o defaults,noatime,discard,ssd,subvol=@pkg /dev/mapper/lukspart /mnt/var/cache/pacman/pkg/
-mount -o defaults,noatime,discard,ssd,subvol=@docker /dev/mapper/lukspart /mnt/var/lib/docker
-mount -o defaults,noatime,discard,ssd,subvol=.@snapshots /dev/mapper/lukspart /mnt/.snapshots
+# SSD mount option is exlusive to SSD disks only
+mount -o defaults,noatime,ssd,subvol=@home /dev/mapper/lukspart /mnt/home
+mount -o defaults,noatime,ssd,subvol=@tmp /dev/mapper/lukspart /mnt/tmp
+mount -o defaults,noatime,ssd,subvol=@log /dev/mapper/lukspart /mnt/var/log
+mount -o defaults,noatime,ssd,subvol=@pkg /dev/mapper/lukspart /mnt/var/cache/pacman/pkg/
+mount -o defaults,noatime,ssd,subvol=@docker /dev/mapper/lukspart /mnt/var/lib/docker
+mount -o defaults,noatime,ssd,subvol=.@snapshots /dev/mapper/lukspart /mnt/.snapshots
 ```
 
 ### Prepare the EFI partition
