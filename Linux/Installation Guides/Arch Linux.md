@@ -363,16 +363,20 @@ timeout: 5
 /Arch Linux (linux)
     protocol: linux
     path: boot():/vmlinuz-linux
+    # replace with intel-ucode.img if the target has an Intel CPU.
+    module_path: boot():/amd-ucode.img
+    module_path: boot():/initramfs-linux.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
     cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
-    module_path: boot():/initramfs-linux.img
 
 /Arch Linux (linux-fallback)
     protocol: linux
     path: boot():/vmlinuz-linux
+    # replace with intel-ucode.img if the target has an Intel CPU.
+    module_path: boot():/amd-ucode.img
+    module_path: boot():/initramfs-linux-fallback.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
     cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
-    module_path: boot():/initramfs-linux-fallback.img
 ```
 
 #### Restrict `/boot` permissions
