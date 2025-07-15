@@ -1,8 +1,8 @@
 # Google Chrome
 
-## uBlock Origin Store Guide
+## uBlock Origin Web Store Guide
 
-**Google Chrome Web Store Guide**
+**Google Chrome uBlock Origin Web Store Guide**
 - Paste `chrome://flags/#allow-legacy-mv2-extensions` into **google chrome's** search bar
 - Adjust `Default` to `Enable`
 - Select relaunch
