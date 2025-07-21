@@ -27,7 +27,8 @@ SFC, short for System File Checker. Scans for important system files and restore
 
 **Repair important files with the DISM, SFC commands**
 
-- Press `CTRL` + `ALT` then `C`, accept the **(UAC)** prompt
+- Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
+- Accept the **(UAC)** prompt
 - Run the following commands: 
 
   ```DISM.exe /Online /Cleanup-Image /RestoreHealth```

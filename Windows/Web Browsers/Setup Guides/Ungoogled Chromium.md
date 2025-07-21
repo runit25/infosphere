@@ -4,7 +4,8 @@
 
 **Install Ungoogled Chromium**
 
-- Press `CTRL` + `ALT` then `C`, accept the **(UAC)** prompt
+- Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
+- Accept the **(UAC)** prompt
 - paste `winget search ungoogled-chromium` into the terminal to discover **Ungoogled Chromium's** package (ID) value `eloston.ungoogled-chromium`
 - Install **Ungoogled Chromium** `winget install -e eloston.ungoogled-chromium`
 - Package (ID) maintenance `winget upgrade --all` **upgrades everything**

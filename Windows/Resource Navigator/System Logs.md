@@ -39,7 +39,7 @@ MPLog
 
 **Upload your process list**
 
-- Press `CTRL` + `ALT` then `C`
+- Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
 - Accept the **(UAC)** prompt
 - Type the following: `Get-Process > Documents\proclist.txt`
 - Open file explorer > **Documents**, upload `proclist.txt` here
