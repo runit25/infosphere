@@ -1,5 +1,7 @@
 # Second Opinion Scanners
 
+## Rkill
+
 **Rkill**
 
 Rkill terminates malicious processes, allowing you to run security-related suites normally.
@@ -12,7 +14,9 @@ Download here: <https://www.bleepingcomputer.com/download/rkill/dl/10/>
 
 ***
 
-**adwcleaner**
+## ADWCleaner
+
+**ADWCeaner**
 
 Download here: <https://adwcleaner.malwarebytes.com/adwcleaner?channel=release>
 
@@ -21,6 +25,8 @@ Download here: <https://adwcleaner.malwarebytes.com/adwcleaner?channel=release>
 - Once complete, upload the `.txt` log located here: `C:\AdwCleaner\Logs` for further analysis
 
 ***
+
+## Sophos Scan and Clean
 
 **Sophos Scan and Clean**
 
@@ -32,6 +38,8 @@ Download here: <https://download.sophos.com/tools/SophosScanAndClean_x64.exe>
 - Once complete, click `Save Log` and upload the `.txt` file here for further analysis
 
 ***
+
+## Hitman Pro
 
 **Hitman Pro**
 
@@ -45,6 +53,8 @@ Download here: <https://download.sophos.com/endpoint/clients/HitmanPro_x64.exe>
 
 ***
 
+## Trojan Killer*
+
 **Trojan Killer**
 
 Download here: <https://gridinsoft.com/download/trojankiller>
@@ -57,6 +67,8 @@ Download here: <https://gridinsoft.com/download/trojankiller>
 
 ***
 
+## NPE
+
 **NPE**
 
 Download here: <https://www.norton.com/npe_latest>
@@ -67,6 +79,8 @@ Download here: <https://www.norton.com/npe_latest>
 - Once complete, share the results for further analysis
 
 ***
+
+## Emsisoft Emergency Kit
 
 **Emsisoft Emergency Kit**
 
@@ -81,6 +95,8 @@ Download here: <https://dl.emsisoft.com/EmsisoftEmergencyKit.exe>
 - Once complete, upload the `.txt` log located here: `C:\EEK\Reports` for further analysis
 
 ***
+
+## ESET Online Scanner
 
 **ESET Online Scanner**
 
@@ -97,6 +113,8 @@ Download here: <https://download.eset.com/com/eset/tools/online_scanner/latest/e
 
 ***
 
+## KVRT
+
 **KVRT**
 
 Download here: <https://www.kaspersky.com/downloads/free-virus-removal-tool>
@@ -107,6 +125,8 @@ Download here: <https://www.kaspersky.com/downloads/free-virus-removal-tool>
 - Click `OK`, **Start scan**
 - Once complete, post screenshots of the results here for further analysis
 ***
+
+## MSERT
 
 **MSERT**
 

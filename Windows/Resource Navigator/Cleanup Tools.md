@@ -2,6 +2,8 @@
 
 ## Software Clean-up Tool
 
+### BCUninstaller Guide
+
 **BCUninstaller Guide**
 
 Bulk Crap Uninstaller (BCU) is a free and open-source program used to quickly uninstall multiple programs with minimal effort. Including their leftover remains automatically
@@ -20,6 +22,8 @@ Uninstall the following programs:
 
 ***
 
+### Geek Uninstaller
+
 **Geek Uninstaller**
 
 Download here: <https://geekuninstaller.com/geek.zip>
@@ -32,6 +36,8 @@ Uninstall the following programs:
 - Right-click, `select Uninstall` or `double-click` to uninstall
 
 ***
+
+### Revo Uninstaller
 
 **Revo Uninstaller**
 
@@ -46,6 +52,8 @@ Uninstall the following programs:
 
 ***
 
+### KpRm
+
 **KpRm**
 
 Download here: <https://toolslib.net/downloads/finish/951-kprm/>
@@ -59,7 +67,7 @@ Download here: <https://toolslib.net/downloads/finish/951-kprm/>
 
 ***
 
-## Collective Anti-Malware Clean-up Tool
+### Collective Anti-Malware Clean-up Tool
 
 **Antivirus Removal Tool**
 
@@ -73,24 +81,24 @@ Download here: <https://antivirus-removal-tool.com/download/click.php?id=Antivir
 - Click **Search**
 - Once complete, Click **Export...** and upload the `ART_Report` here for further analysis
 
-## Standalone Anti-Malware Clean-up Tools
-
-- AVG: <https://www.avg.com/en-us/avg-remover#pc>
-
-- Norton: <https://norton.com/nrnr>
-
-- Avast: <https://www.avast.com/uninstall-utility#pc>
-
-- Avira: <https://support.avira.com/hc/en-us/articles/360003162153-Uninstallation-of-Avira-for-Windows>
-
-- Malwarebytes: <https://downloads.malwarebytes.com/file/mbst>
-
-- Kaspersky: <https://support.kaspersky.com/common/uninstall/1464>
-
-- Bitdefender: <https://www.bitdefender.com/links/uninstall_consumer_paid.html>
-
-- Emsisoft: <https://dl.emsisoft.com/Emsiclean.zip>
-
-- G-Data: <https://www.gdata.de/help/en/consumer/FAQ/AVCleanerFAQ/>
-
-- ESET: <https://support.eset.com/en/kb3527-eset-av-remover#removable>
+    #### Standalone Anti-Malware Clean-up Tools
+    
+    - AVG: <https://www.avg.com/en-us/avg-remover#pc>
+    
+    - Norton: <https://norton.com/nrnr>
+    
+    - Avast: <https://www.avast.com/uninstall-utility#pc>
+    
+    - Avira: <https://support.avira.com/hc/en-us/articles/360003162153-Uninstallation-of-Avira-for-Windows>
+    
+    - Malwarebytes: <https://downloads.malwarebytes.com/file/mbst>
+    
+    - Kaspersky: <https://support.kaspersky.com/common/uninstall/1464>
+    
+    - Bitdefender: <https://www.bitdefender.com/links/uninstall_consumer_paid.html>
+    
+    - Emsisoft: <https://dl.emsisoft.com/Emsiclean.zip>
+    
+    - G-Data: <https://www.gdata.de/help/en/consumer/FAQ/AVCleanerFAQ/>
+    
+    - ESET: <https://support.eset.com/en/kb3527-eset-av-remover#removable>
