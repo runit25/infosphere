@@ -35,3 +35,15 @@ SFC, short for System File Checker. Scans for important system files and restore
   
   ```SFC /ScanNow```
   - __Note:__  **DISM** requires an active **NAT** (Internet connection to function)
+
+***
+
+## Disable/Enable Fast-Startup
+
+**Turn on/off fast-startup**
+
+- Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
+- Accept the **(UAC)** prompt
+- Follow the following commands:
+- Disable fast-startup: `powercfg /h off`
+- Enable fast-startup: `powercfg /h on`
