@@ -47,6 +47,7 @@ CMD: winmgmt /resyncperf
 CMD: DISM.exe /Online /Cleanup-Image /RestoreHealth
 CMD: SFC /ScanNow
 CMD: DISM.exe /Online /Cleanup-Image /StartComponentCleanup /ResetBase
+CMD: REG ADD "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f
 EmptyEventLogs:
 Emptytemp:
 End::
