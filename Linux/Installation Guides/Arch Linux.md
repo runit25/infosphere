@@ -323,6 +323,10 @@ nano /etc/doas.conf
 # Allow <user> to execute root commands
 permit persist keepenv <user>
 ```
+```shell
+# Restrict `/etc/doas.conf` permissions
+chmod 600 /etc/doas.conf
+```
 
 #### (Optional) Set up a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
 ```shell
