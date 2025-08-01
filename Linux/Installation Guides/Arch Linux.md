@@ -258,9 +258,15 @@ mkinitcpio -P
 
 ### Enabled Networking services
 ```shell
-systemctl enable dhcpcd
 systemctl enable iwd.service
 systemctl enable sshd # Optionally enable if you're going to use SSH
+```
+#### (Optional) Disable IPv6
+```shell
+nano /etc/iwd/main.conf
+
+# Add
+EnableIPv6=false
 ```
 
 #### Enable multilib
