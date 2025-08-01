@@ -382,6 +382,7 @@ timeout: 5
 #### Restrict `/boot` permissions
 ```shell
 chmod 700 /boot
+chmod 600 /boot/limine.conf
 ```
 
 Congratulations the installation is now complete.
