@@ -229,14 +229,16 @@ nano /etc/hosts
 
 ### Set up 4G swap file
 ```shell
-btrfs su cr /var/swap
+# Create swap subvolume
+btrfs subvolume create /var/swap
+# Create sparse file (efficient)
 truncate -s 0 /var/swap/swapfile
 chattr +C /var/swap/swapfile
 chmod 600 /var/swap/swapfile
-dd if=/dev/zero of=/var/swap/swapfile bs=1G count=4 status=progress
-mkswap /var/swap/swapfile
+fallocate -l 4G /var/swap/swapfile
+mkswap --label swapfile /var/swap/swapfile
 swapon /var/swap/swapfile
-echo "/var/swap/swapfile none swap defaults 0 0" >> /etc/fstab
+echo '/var/swap/swapfile none swap defaults,x-systemd.device-timeout=2,noauto 0 0' >> /etc/fstab
 ```
 
 ### Initramfs
