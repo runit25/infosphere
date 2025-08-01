@@ -330,6 +330,10 @@ nano ~/.bashrc
 # sudo alias for opendoas
 alias sudo="doas"
 ```
+```shell
+# Restrict `/etc/doas.conf` permissions
+chmod 600 /etc/doas.conf
+```
 
 ### Bootloader
 ```shell
