@@ -167,23 +167,11 @@ lsblk
 ```
 
 ### Configuring Locales
-#### Enable Time Sync
+#### Secure Time and Locale
 ```shell
 timedatectl set-ntp true
-```
-
-#### Set your timezone
-```shell
-# Check available timezones
-timedatectl list-timezones
-
-# Example location output (Europe/London)
-timedatectl set-timezone Europe/London
-```
-
-#### Sync hardware clock
-```shell
-hwclock --systohc
+timedatectl set-timezone UTC  # More secure; avoids DST issues
+hwclock --systohc --utc
 ```
 
 #### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen` and generate locale
