@@ -12,7 +12,7 @@
 
 ***
 
-## Web Store Guide
+### Web Store Guide
 
 **Ungoogled_Chromium Web Store Guide**
 
@@ -21,3 +21,13 @@
 - Select relaunch
 - Download [Chromium.Web.Store.crx](<https://github.com/NeverDecaf/chromium-web-store/releases>) here
 - Accept the **Browser Prompt**, which allows you to install [Extensions here](<https://chromewebstore.google.com/>)
+
+***
+
+### uBlock Origin Guide
+
+**Ungoogled Chromium uBlock Origin Guide**
+- Download [uBlock Origin](<https://github.com/gorhill/uBlock/releases>) here by selecting `uBlock0_x.xx.x.chromium.zip` under assets
+- Head to `chrome://extensions`, check mark `Developer mode` top right
+- Unzip `uBlock0_x.xx.x.chromium.zip`
+- Load unpacked > Select `uBlock0.chromium
