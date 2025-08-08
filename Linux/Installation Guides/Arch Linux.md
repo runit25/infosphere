@@ -328,7 +328,9 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4 \
+             add_efi_memmap \
+             vsyscall=none 
 
 /Arch Linux (linux-fallback)
     protocol: linux
@@ -337,7 +339,9 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux-fallback.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4 \
+             add_efi_memmap \
+             vsyscall=none 
 ```
 
 #### Restrict `/boot` permissions
