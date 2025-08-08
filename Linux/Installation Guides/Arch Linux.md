@@ -251,16 +251,6 @@ systemctl enable iwd.service
 systemctl enable sshd # Optionally enable if you're going to use SSH
 ```
 
-#### Enable multilib
-```shell
-# Uncomment the `[multilib]` section in `/etc/pacman.conf`:
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-
-# refresh your package databases
-pacman -Syu
-```
-
 #### Install microcode for the latest CPU features and security updates
 ```shell
 # AMD CPU:
@@ -290,6 +280,16 @@ sudo mkinitcpio -P
 nano /etc/modprobe.d/nvidia.conf
 # Add row to the file
 options nvidia_drm modeset=1
+```
+
+#### Enable multilib
+```shell
+# Uncomment the `[multilib]` section in `/etc/pacman.conf`:
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+# refresh your package databases
+pacman -Syu
 ```
 
 ### Set your Root password
