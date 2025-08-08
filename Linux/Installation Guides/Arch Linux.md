@@ -299,28 +299,24 @@ passwd
 
 ### Add Linux User
 ```shell
-useradd -m -G wheel,storage,power -s /bin/bash <user>
-passwd <user>
+useradd -m -G wheel,storage,power -s /bin/bash yourusername
+passwd yourusername
 ```
 
 ### opendoas (doas) allows you to run root Commands
 ```shell
 pacman -S opendoas
 
-nano /etc/doas.conf
-# Allow <user> to execute root commands
-permit persist keepenv <user>
-```
-```shell
+# Allow <yourusername> to execute root commands
+echo "permit persist keepenv $yourusername" > /etc/doas.conf
+
 # Restrict `/etc/doas.conf` permissions
 chmod 600 /etc/doas.conf
 ```
 
 #### (Optional) Set up a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
 ```shell
-nano ~/.bashrc
-# sudo alias for opendoas
-alias sudo="doas"
+echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
 ### Bootloader
