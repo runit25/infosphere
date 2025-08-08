@@ -2,13 +2,13 @@
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes Secure Boot, Limine Bootloader, BTRFS+Backup, LUKS+Base Install
+Installation includes secure boot, limine bootloader, ext4, and luks2+base install.
 
-**Note:** substitute `/dev/nvme0nX` with your corrosponding drive (**Example:** "/dev/sda")
+**Note:** substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
 
 ## Pre-installation
 ### Verify boot mode
-#### if you're using UEFI, `/sys/firmware/efi/efivars` should exist
+#### If you're using UEFI, `/sys/firmware/efi/efivars` should exist
 ```shell
 # If the directory doesn't exist your using Legacy BIOS mode
 ls /sys/firmware/efi/efivars
@@ -70,60 +70,28 @@ select [ Write ]
 |2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
 ```
 
-### Encrypt the partition
+### Encrypt the root partition (luks2)
 ```shell
-# Encrypt the root partition
-cryptsetup luksFormat --use-urandom -S 1 -s 512 -h sha512 -i 5000 /dev/nvme0n1p2
-
-# Open the encrypted partition
+cryptsetup luksFormat --type luks2 /dev/nvme0n1p2
+# Confirm and set strong passphrase
+```
+### Open the encrypted partition
+```shell
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
 ```
 
-#### Prepare the BTRFS subvolumes
+### Mount the root partition
 ```shell
-# Format (encrypted) btrfs
-mkfs.btrfs -L "Arch Linux" /dev/mapper/lukspart
+# Format the (encrypted) ext4
+mkfs.ext4 -L "Arch Linux" /dev/mapper/lukspart
 # Mount filesystem
 mount /dev/mapper/lukspart /mnt
 ```
 
-#### Configure the BTRFS subvolumes
-```shell
-btrfs su cr /mnt/@
-btrfs su cr /mnt/@home
-btrfs su cr /mnt/@tmp
-btrfs su cr /mnt/@log
-btrfs su cr /mnt/@pkg
-btrfs su cr /mnt/@docker
-btrfs su cr /mnt/.@snapshots
-
-# Disable copy on write (CoW) on "/var/log" and "/tmp"
-chattr +C /mnt/@log
-chattr +C /mnt/@tmp  
-umount /mnt
-```
-
-#### Mount BTRFS Subvolumes
-```shell
-mount -o defaults,noatime,ssd,subvol=@ /dev/mapper/lukspart /mnt  
-mkdir -p /mnt/{home,var/log,var/cache/pacman/pkg,var/lib/docker,tmp,.snapshots}
-
-# SSD mount option is exlusive to SSD disks only
-mount -o defaults,noatime,ssd,subvol=@home /dev/mapper/lukspart /mnt/home
-mount -o defaults,noatime,ssd,subvol=@tmp /dev/mapper/lukspart /mnt/tmp
-mount -o defaults,noatime,ssd,subvol=@log /dev/mapper/lukspart /mnt/var/log
-mount -o defaults,noatime,ssd,subvol=@pkg /dev/mapper/lukspart /mnt/var/cache/pacman/pkg/
-mount -o defaults,noatime,ssd,subvol=@docker /dev/mapper/lukspart /mnt/var/lib/docker
-mount -o defaults,noatime,ssd,subvol=.@snapshots /dev/mapper/lukspart /mnt/.snapshots
-```
-
 ### Prepare the EFI partition
 ```shell
-# Create a FAT32 filesystem on the EFI system partition
 mkfs.fat -F32 /dev/nvme0n1p1
-
-# Create a mount point for the EFI system partition at /boot for compatibility with Limine
-mkdir /mnt/boot
+mkdir -p /mnt/boot
 mount /dev/nvme0n1p1 /mnt/boot
 ```
 
@@ -131,7 +99,7 @@ mount /dev/nvme0n1p1 /mnt/boot
 ### Install necessary packages
 (openssh) is optional, but be sure to install it if you're going to use (SSH)
 ```shell
-pacstrap -K /mnt/ base base-devel linux linux-firmware polkit git btrfs-progs mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap -K /mnt base base-devel linux linux-firmware polkit git mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 
 ## Configure your system
@@ -174,7 +142,7 @@ timedatectl set-timezone UTC  # More secure; avoids DST issues
 hwclock --systohc --utc
 ```
 
-#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen` and generate locale
+#### Uncomment `en_GB.UTF-8 UTF-8` in:
 ```shell
 nano /etc/locale.gen
 ```
@@ -217,26 +185,27 @@ nano /etc/hosts
 
 ### Set up 4G swap file
 ```shell
-# Create swap subvolume
-btrfs subvolume create /var/swap
-# Create sparse file (efficient)
-truncate -s 0 /var/swap/swapfile
-chattr +C /var/swap/swapfile
+# Create the directory for swap file
+mkdir /var/swap
+chmod 755 /var/swap
+
+# Create swap file (4G)
+dd if=/dev/zero of=/var/swap/swapfile bs=1M count=4096 status=progress
 chmod 600 /var/swap/swapfile
-fallocate -l 4G /var/swap/swapfile
-mkswap --label swapfile /var/swap/swapfile
+
+# Format as swap
+mkswap /var/swap/swapfile
 swapon /var/swap/swapfile
+
+# Add to fstab
 echo '/var/swap/swapfile none swap defaults,noauto 0 0' >> /etc/fstab
 ```
 
 ### Initramfs
-#### Add `encrypt`, and `btrfs` hooks to `/etc/mkinitcpio.conf`
+#### Add `encrypt` hook to `/etc/mkinitcpio.conf`
 Note: ordering matters
 ```shell
-HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt btrfs filesystems fsck)
-
-# Add btrfsck to binaries
-BINARIES=(btrfsck)
+HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck)
 ```
 
 ### Recreate the initramfs image
@@ -244,7 +213,7 @@ BINARIES=(btrfsck)
 mkinitcpio -P
 ```
 
-### Enabled Networking services
+### Enable networking services
 ```shell
 systemctl enable dhcpcd
 systemctl enable iwd.service
@@ -303,12 +272,12 @@ useradd -m -G wheel,storage,power -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### opendoas (doas) allows you to run root Commands
+### Opendoas (doas) allows you to run commands as root
 ```shell
 pacman -S opendoas
 
 # Allow <yourusername> to execute root commands
-echo "permit persist keepenv $yourusername" > /etc/doas.conf
+echo "permit persist keepenv yourusername" > /etc/doas.conf
 
 # Restrict `/etc/doas.conf` permissions
 chmod 600 /etc/doas.conf
@@ -325,13 +294,13 @@ echo "alias sudo=doas" >> /home/yourusername/.bashrc
 pacman -S limine dosfstools mtools
 ```
 
-#### Copy Bootloader files
+#### Copy the bootloader files
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-#### Get PARTUUID of LUKS partition
+#### Retrieve 'PARTUUID' from the luks partition
 ```shell
 blkid /dev/nvme0n1p2
 # Output: /dev/nvme0n1p2: PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -372,7 +341,7 @@ chmod 600 /boot/limine.conf
 
 Congratulations the installation is now complete.
 ```shell
-# Exit choort and reboot
+# Exit chroot and reboot
 exit
 umount -R /mnt
 reboot
