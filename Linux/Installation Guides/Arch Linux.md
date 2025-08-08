@@ -331,19 +331,14 @@ pacman -S limine dosfstools mtools
 
 #### Copy Bootloader files
 ```shell
-mkdir -p /boot/EFI/BOOT/
-cp -v /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
-ls /usr/share/limine
+mkdir -p /boot/EFI/BOOT
+cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-#### Set the kernel parameter to unlock the BTRFS physical volume at boot 
-UUID is the partition containing the LUKS container
+#### Get PARTUUID of LUKS partition
 ```shell
-blkid
-```
-
-```shell
-/dev/nvme0n1p2: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="crypto_LUKS" PARTLABEL="Linux LUKS" PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+blkid /dev/nvme0n1p2
+# Output: /dev/nvme0n1p2: PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
 ```shell
@@ -361,7 +356,7 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4
 
 /Arch Linux (linux-fallback)
     protocol: linux
@@ -370,7 +365,7 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux-fallback.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:root root=/dev/mapper/root rootflags=subvol=@ rw rootfstype=btrfs
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4
 ```
 
 #### Restrict `/boot` permissions
@@ -383,5 +378,6 @@ Congratulations the installation is now complete.
 ```shell
 # Exit choort and reboot
 exit
+umount -R /mnt
 reboot
 ```
