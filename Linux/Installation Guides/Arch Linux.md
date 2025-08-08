@@ -72,7 +72,14 @@ select [ Write ]
 
 ### Encrypt the root partition (luks2)
 ```shell
-cryptsetup luksFormat --type luks2 /dev/nvme0n1p2
+cryptsetup luksFormat \
+  --type luks2 \
+  --cipher aes-xts-plain64 \
+  --key-size 512 \
+  --hash sha512 \
+  --pbkdf argon2id \
+  /dev/nvme0n1p2
+
 # Confirm and set strong passphrase
 ```
 ### Open the encrypted partition
