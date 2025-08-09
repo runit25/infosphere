@@ -2,7 +2,7 @@
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes secure boot, limine bootloader, ext4, and luks2+base install.
+Installation includes secure boot, limine bootloader, lvm2, ext4, and luks2+base installation.
 
 **Note:** substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
 
@@ -87,12 +87,35 @@ cryptsetup luksFormat \
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
 ```
 
-### Mount the root partition
+### Create LVM Physical Volume and Volume Group
 ```shell
-# Format the (encrypted) ext4
-mkfs.ext4 -L "Arch Linux" /dev/mapper/lukspart
-# Mount filesystem
-mount /dev/mapper/lukspart /mnt
+pvcreate /dev/mapper/lukspart
+vgcreate vg /dev/mapper/lukspart
+```
+
+### Create Logical Volumes for `/` and `/home`
+```shell
+# Root: 50G (adjust as needed)
+lvcreate -L 50G vg -n root
+
+# Home: rest of the space
+lvcreate -l 100%FREE vg -n home
+```
+
+### Format and Mount Filesystems
+```shell
+# Format root
+mkfs.ext4 -L "Arch Root" /dev/vg/root
+
+# Format home
+mkfs.ext4 -L "Arch Home" /dev/vg/home
+
+# Mount root
+mount /dev/vg/root /mnt
+
+# Create and mount home
+mkdir /mnt/home
+mount /dev/vg/home /mnt/home
 ```
 
 ### Prepare the EFI partition
@@ -127,18 +150,14 @@ lsblk
 
 ```shell
 # Expected output
-| NAME         | MAJ:MIN | RM | SIZE   | RO | TYPE  | MOUNTPOINT            |
-| ------------ | ------- | -- | ------ | -- | ----- | --------------------- |
-| nvme0n1      | 259:0   | 0  | 475.9G | 0  | disk  |                       |
-| ├─nvme0n1p1  | 259:5   | 0  | 1G     | 0  | part  | /boot                 |
-| ├─nvme0n1p2  | 259:6   | 0  | 464.9G | 0  | part  |                       |
-| ..└─lukspart | 254:0   | 0  | 464.9G | 0  | crypt | /.snapshots           |
-|              |         |    |        |    |       | /var/lib/docker       |
-|              |         |    |        |    |       | /var/cache/pacman/pkg |
-|              |         |    |        |    |       | /var/log              |
-|              |         |    |        |    |       | /tmp                  |
-|              |         |    |        |    |       | /home                 |
-|              |         |    |        |    |       | /                     |
+| NAME          | MAJ:MIN | RM | SIZE   | RO | TYPE  | MOUNTPOINT |
+| ------------- | ------- | -- | ------ | -- | ----- | ---------- |
+| nvme0n1       | 259:0   | 0  | 476.9G | 0  | disk  |            |
+| ├─nvme0n1p1   | 259:1   | 0  |     1G | 0  | part  | /boot      |
+| └─nvme0n1p2   | 259:2   | 0  | 475.9G | 0  | part  |            |
+|   └─lukspart  | 254:0   | 0  | 475.9G | 0  | crypt |            |
+|     ├─vg-root | 254:1   | 0  |    50G | 0  | lvm   | /          |
+|     └─vg-home | 254:2   | 0  | 425.9G | 0  | lvm   | /home      |
 ```
 
 ### Configuring Locales
@@ -212,7 +231,7 @@ echo '/var/swap/swapfile none swap defaults,noauto 0 0' >> /etc/fstab
 #### Add `encrypt` hook to `/etc/mkinitcpio.conf`
 Note: ordering matters
 ```shell
-HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck)
+HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
 
 ### Recreate the initramfs image
@@ -328,9 +347,7 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4 \
-             add_efi_memmap \
-             vsyscall=none 
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
 /Arch Linux (linux-fallback)
     protocol: linux
@@ -339,9 +356,7 @@ timeout: 5
     module_path: boot():/amd-ucode.img
     module_path: boot():/initramfs-linux-fallback.img
     # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/mapper/lukspart rw rootfstype=ext4 \
-             add_efi_memmap \
-             vsyscall=none 
+    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
 
 #### Restrict `/boot` permissions
