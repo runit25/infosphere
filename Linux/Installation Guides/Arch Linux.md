@@ -256,13 +256,13 @@ pacman -S intel-ucode
 mkinitcpio -p linux
 ```
 
-#### Graphical Drivers
-##### Intell/AMD Cards
+### Graphical Drivers
+#### Intell/AMD Cards
 ```shell
 pacman -S mesa
 ```
 
-##### Nvidia Cards
+#### Nvidia Cards
 ```shell
 pacman -S nvidia nvidia-utils
 
@@ -314,14 +314,15 @@ chmod 600 /etc/doas.conf
 echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
-### Bootloader
+
+### Prepare Limine for Secure Boot
 ```shell
-# Install limine
-pacman -S limine dosfstools mtools
+# Install limine bootloader
+pacman -S limine
 ```
 
-#### Copy the bootloader files
 ```shell
+# Copy the pre-signed UEFI bootloader
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
@@ -332,6 +333,7 @@ blkid /dev/nvme0n1p2
 # Output: /dev/nvme0n1p2: PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
+#### Create `/boot/limine.conf`:
 ```shell
 nano /boot/limine.conf
 ```
@@ -365,10 +367,67 @@ chmod 700 /boot
 chmod 600 /boot/limine.conf
 ```
 
+####  Sign Bootloader and Kernel
+```shell
+sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
+sbctl sign -s /boot/vmlinuz-linux
+sbctl sign -s /boot/initramfs-linux.img
+sbctl sign -s /boot/initramfs-linux-fallback.img
+sbctl sign -s /boot/amd-ucode.img # Replace `amd-ucode.img` with `intel-ucode.img` if you're an Intel user.
+```
+
+### Verify if Everything Is Signed
+```shell
+sbctl verify
+```
+
+#### Automate sign updates
+```shell
+nano /etc/pacman.d/hooks/100-sign-secureboot.hook
+```
+
+```ini
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = boot/vmlinuz-linux
+Target = boot/initramfs-linux.img
+Target = boot/amd-ucode.img
+Target = boot/intel-ucode.img
+
+[Action]
+Description = Signing EFI binaries for Secure Boot
+When = PostTransaction
+Exec = /usr/bin/sbctl sign-all
+```
+
 Congratulations the installation is now complete.
 ```shell
 # Exit chroot and reboot
 exit
 umount -R /mnt
 reboot
+```
+
+### Enable Secure Boot (Firmware)
+#### Reboot and enter UEFI (Bios)
+```shell
+# Boot → Secure Boot
+
+# Ensure:
+Secure Boot = Enabled
+Mode = User Mode or Custom Mode
+Setup Mode = False (after enrollment)
+
+Save and exit.
+```
+
+#### Verify Secure Boot is Active (After Boot)
+```shell
+mokutil --sb-state # Should display Secure boot enabled
+
+dmesg | grep -i "secure boot" # Should display Secure boot enabled
+
+sbctl status # Should display binaries signed, enrolled keys, etc.
 ```
