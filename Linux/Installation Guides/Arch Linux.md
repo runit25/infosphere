@@ -82,6 +82,7 @@ cryptsetup luksFormat \
 
 # Confirm and set strong passphrase
 ```
+
 ### Open the encrypted partition
 ```shell
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
