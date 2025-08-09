@@ -2,7 +2,7 @@
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes secure boot, limine bootloader, lvm2, ext4, and luks2+base installation.
+Installation includes full disk encryption (LUKS2 + LVM), limine bootloader (Secure Boot), ext4, and base system.
 
 **Note:** substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
 
