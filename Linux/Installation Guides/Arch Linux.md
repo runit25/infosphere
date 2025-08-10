@@ -188,7 +188,7 @@ locale-gen
 ```shell
 localectl set-locale LANG="en_GB.UTF-8"
 localectl set-locale LC_TIME="en_GB.UTF-8"
-localectl set-keymap uk
+echo "KEYMAP=uk" > /etc/vconsole.conf
 ```
 
 ### Network configuration
