@@ -10,7 +10,7 @@ Installation includes full disk encryption (LUKS2 + LVM), limine bootloader (Sec
 ### Verify boot mode
 #### If you're using UEFI, `/sys/firmware/efi/efivars` should exist
 ```shell
-# If the directory doesn't exist your using Legacy BIOS mode
+# If the directory doesn't exist, you're using Legacy BIOS mode and this guide won't work
 ls /sys/firmware/efi/efivars
 ```
 
@@ -225,7 +225,7 @@ mkswap /var/swap/swapfile
 swapon /var/swap/swapfile
 
 # Add to fstab
-echo '/var/swap/swapfile none swap defaults,noauto 0 0' >> /etc/fstab
+echo '/var/swap/swapfile none swap defaults,noauto,sw 0 0' >> /etc/fstab
 ```
 
 ### Initramfs
@@ -300,61 +300,171 @@ chmod 600 /etc/doas.conf
 echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
-### Bootloader
+### Install limine and sbctl
 ```shell
-# Install limine
-pacman -S limine dosfstools mtools
+pacman -S limine sbctl
 ```
 
-#### Copy the bootloader files
+### Generate Secure Boot Keys
+```shell
+sbctl generate-keys
+```
+
+#### `sbctl generate-keys` creates: 
+```shell
+/var/db/sbctl/owner.key # private
+
+/var/db/sbctl/owner.crt # public, to be enrolled
+```
+
+### Enroll Keys via MokManager
+```shell
+sbctl enroll-keys --mok
+
+# This adds a key to the MOK (Machine Owner Key) list.
+
+On next boot, the MokManager (blue screen) will appear.
+
+You must:
+
+1. Select "Enroll MOK"
+
+2. Select "Continue"
+
+3. Select "Yes"
+
+4. Enter the password you set during generate-keys
+
+After this, the system will trust your signed binaries.
+```
+
+### Copy limine UEFI Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-#### Retrieve 'PARTUUID' from the luks partition
+### receive UUID for `/boot/limine.conf`
 ```shell
-blkid /dev/nvme0n1p2
-# Output: /dev/nvme0n1p2: PARTUUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+blkid -s UUID -o value /dev/nvme0n1p2
+
+# Example output: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
 ```
 
+### Create `/boot/limine.conf`:
 ```shell
 nano /boot/limine.conf
 ```
 
 ```shell
-# Designates 5 second timer until Limine automatically boots
+# Designates a 5 second timer until Limine automatically boots
 timeout: 5
 
 /Arch Linux (linux)
     protocol: linux
-    path: boot():/vmlinuz-linux
-    # replace with intel-ucode.img if the target has an Intel CPU.
-    module_path: boot():/amd-ucode.img
-    module_path: boot():/initramfs-linux.img
-    # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+    path: boot:/vmlinuz-linux
+    module_path: boot:/amd-ucode.img # Use "intel-ucode.img" for Intel
+    module_path: boot:/initramfs-linux.img
+    cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
 /Arch Linux (linux-fallback)
     protocol: linux
-    path: boot():/vmlinuz-linux
-    # replace with intel-ucode.img if the target has an Intel CPU.
-    module_path: boot():/amd-ucode.img
-    module_path: boot():/initramfs-linux-fallback.img
-    # replace "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" with your "/dev/nvme0n1p2" PARTUUID
-    cmdline: cryptdevice=PARTUUID=your-partuuid-here:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+    path: boot:/vmlinuz-linux
+    module_path: boot:/amd-ucode.img      # Use intel-ucode.img for Intel
+    module_path: boot:/initramfs-linux-fallback.img
+    cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+
 ```
 
-#### Restrict `/boot` permissions
+### Fix `/boot` Permissions
 ```shell
-chmod 700 /boot
+chmod 755 /boot
 chmod 600 /boot/limine.conf
 ```
 
-Congratulations the installation is now complete.
+### Sign Bootloader and Kernel
+```shell
+sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
+sbctl sign -s /boot/vmlinuz-linux
+sbctl sign -s /boot/initramfs-linux.img
+sbctl sign -s /boot/initramfs-linux-fallback.img
+sbctl sign -s /boot/amd-ucode.img        # Use intel-ucode.img for Intel
+```
+
+Run `sbctl verify` to confirm all files are signed
+
+### Automate Signing on Updates
+```shell
+nano /etc/pacman.d/hooks/100-sign-secureboot.hook
+```
+
+```shell
+[Trigger]
+Type = Path
+Operation = Upgrade
+Target = /boot/vmlinuz-linux
+Target = /boot/initramfs-linux.img
+Target = /boot/amd-ucode.img
+Target = /boot/intel-ucode.img
+
+[Action]
+Description = Signing EFI binaries for Secure Boot
+When = PostTransaction
+Exec = /usr/bin/sbctl sign-all
+NeedsTargets
+```
+
+#### Reboot and Enroll Key (MokManager)
 ```shell
 # Exit chroot and reboot
 exit
 umount -R /mnt
 reboot
 ```
+
+##### On reboot: 
+```shell
+MokManager will appear (blue screen)
+
+Follow prompts to enroll your key
+
+After enrollment, disable Setup Mode
+```
+
+### Enable Secure Boot in Firmware
+#### After key enrollment:
+```shell
+Reboot into UEFI settings
+
+Enable:
+
+Secure Boot = Enabled
+
+Mode = User Mode or Custom Mode
+
+Setup Mode = False
+
+Save and exit
+```
+
+### Verify Secure Boot is Active
+#### After booting:
+```shell
+mokutil --sb-state            # Should say "Secure boot enabled"
+sbctl status                  # Should show "Enrolled keys", "Signed binaries"
+dmesg | grep -i "secure boot" # Should confirm enabled
+```
+
+You now have a fully encrypted, securely booted Arch Linux system with:
+
+LUKS2 + LVM
+
+ext4 root/home
+
+limine bootloader
+
+Secure Boot via sbctl
+
+Proper key enrollment
+
+Automated signing
