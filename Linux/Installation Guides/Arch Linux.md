@@ -257,25 +257,10 @@ pacman -S intel-ucode
 mkinitcpio -p linux
 ```
 
-#### Graphical Drivers
-##### Intell/AMD Cards
+### Graphical Drivers
+#### Intell/AMD Cards
 ```shell
 pacman -S mesa
-```
-
-##### Nvidia Cards
-```shell
-pacman -S nvidia nvidia-utils
-
-sudo nano /etc/mkinitcpio.conf
-# edit Modules and Files
-MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm ...)
-FILES="/etc/modprobe.d/nvidia.conf"
-
-sudo mkinitcpio -P
-nano /etc/modprobe.d/nvidia.conf
-# Add row to the file
-options nvidia_drm modeset=1
 ```
 
 #### Enable multilib
