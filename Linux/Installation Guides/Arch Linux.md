@@ -71,6 +71,7 @@ select [ Write ]
 ```
 
 ### Encrypt the root partition (luks2)
+#### Modern System (4+ CPU cores, 16 GB+ RAM)
 ```shell
 cryptsetup luksFormat \
   --type luks2 \
@@ -78,9 +79,47 @@ cryptsetup luksFormat \
   --key-size 512 \
   --hash sha512 \
   --pbkdf argon2id \
+  --iter-time 7500 \
+  --pbkdf-memory 1048576 \
+  --pbkdf-parallel 4 \
+  --sector-size 512 \
+  --align-payload 8192 \
+  --label arch_root_encrypted \
   /dev/nvme0n1p2
+```
 
-# Confirm and set strong passphrase
+#### Mid-Range Systems (2–4 CPU cores, 8 GB RAM)
+```shell
+cryptsetup luksFormat \
+  --type luks2 \
+  --cipher aes-xts-plain64 \
+  --key-size 512 \
+  --hash sha512 \
+  --pbkdf argon2id \
+  --iter-time 5000 \
+  --pbkdf-memory 524288 \
+  --pbkdf-parallel 2 \
+  --sector-size 512 \
+  --align-payload 8192 \
+  --label arch_root_encrypted \
+  /dev/nvme0n1p2
+```
+
+#### Low-End Systems (2 CPU cores, 4 GB RAM or less)
+```shell
+cryptsetup luksFormat \
+  --type luks2 \
+  --cipher aes-xts-plain64 \
+  --key-size 512 \
+  --hash sha512 \
+  --pbkdf argon2id \
+  --iter-time 3000 \
+  --pbkdf-memory 262144 \
+  --pbkdf-parallel 1 \
+  --sector-size 512 \
+  --align-payload 8192 \
+  --label arch_root_encrypted \
+  /dev/nvme0n1p2
 ```
 
 ### Open the encrypted partition
