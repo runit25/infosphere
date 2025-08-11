@@ -363,14 +363,16 @@ timeout: 5
 /Arch Linux (linux)
     protocol: linux
     path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img # Use "intel-ucode.img" for Intel
+    module_path: boot:/amd-ucode.img   # Remove this line if using Intel
+    module_path: boot:/intel-ucode.img # Remove this line if using AMD
     module_path: boot:/initramfs-linux.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
 /Arch Linux (linux-fallback)
     protocol: linux
     path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img      # Use intel-ucode.img for Intel
+    module_path: boot:/amd-ucode.img   # Remove this line if using Intel
+    module_path: boot:/intel-ucode.img # Remove this line if using AMD
     module_path: boot:/initramfs-linux-fallback.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
