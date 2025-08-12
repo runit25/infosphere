@@ -1,10 +1,10 @@
-# Arch Linux install
+# Arch Linux Install
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes full disk encryption (LUKS2 + LVM), limine bootloader (Secure Boot), ext4, and base system.
+Installation includes full disk encryption (LUKS2 + LVM), limine bootloader, ext4, and base system.
 
-**Note:** substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
+**Note:** Substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
 
 ## Pre-installation
 ### 1.0 Verify UEFI Boot Mode
@@ -57,13 +57,13 @@ select [ Delete ]
 # Set up boot partition
 select [ New ] 
 
-Parition Size: 1G
+Partition Size: 1G
 
 select [ Type ] "EFI System"
 # Set up root partition
 select [ New ] 
 
-Parition Size: accept default value
+Partition Size: accept default value
 
 select [ Write ]
 # cfdisk output
@@ -166,7 +166,7 @@ mkfs.ext4 -L "Arch Root"   /dev/vg/root
 mkfs.ext4 -L "Arch Var"    /dev/vg/var
 mkfs.ext4 -L "Arch Tmp"    /dev/vg/tmp
 mkfs.ext4 -L "Arch Home"   /dev/vg/home
-mkswap /dev/vg/swap         # Format swap LV
+mkswap /dev/vg/swap        # Format swap LV
 ```
 
 ### 11.0 Mount Filesystems
@@ -226,7 +226,7 @@ nvme0n1       259:0    0 476.9G  0 disk
 ### 3.0 Set Time and Locale
 ```shell
 timedatectl set-ntp true
-timedatectl set-timezone UTC      # Avoids DST issues
+timedatectl set-timezone UTC # Avoids DST issues
 hwclock --systohc --utc
 ```
 
@@ -300,7 +300,7 @@ mkinitcpio -P
 ```shell
 systemctl enable dhcpcd
 systemctl enable iwd.service
-systemctl enable sshd    # Optional: enable SSH
+systemctl enable sshd        # Optional: enable SSH
 ```
 
 ### 8.0 Install Microcode
@@ -348,7 +348,7 @@ useradd -m -G wheel,storage,power -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### 12.0 12. Install `opendoas`
+### 12.0 Install `opendoas`
 ```shell
 pacman -S opendoas
 ```
@@ -364,42 +364,18 @@ chmod 600 /etc/doas.conf
 echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
-### 13.0 Install `limine` and `sbctl`
+### 13.0 Install `limine`
 ```shell
-pacman -S limine sbctl
+pacman -S limine
 ```
 
-### 14.0 Generate Secure Boot Keys
-```shell
-sbctl generate-keys
-```
-Creates:
-
-`/var/db/sbctl/owner.key` (private)
-
-`/var/db/sbctl/owner.crt` (public)
-
-### 15.0 Enroll Keys via MokManager
-```shell
-sbctl enroll-keys --mok
-```
-You'll be prompted for a PEM password — remember it!
-
-#### On next boot:
-
-1. Blue MokManager screen appears
-2. Select "Enroll MOK"
-3. "Continue" → "Yes"
-4. Enter the password you set
-After enrollment, disable Setup Mode in firmware.
-
-### 16.0 Install `limine` Bootloader
+### 14.0 Install `limine` Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 17.0 Get LUKS Partition UUID
+### 15.0 Get LUKS Partition UUID
 ```shell
 blkid -s UUID -o value /dev/nvme0n1p2
 ```
@@ -431,58 +407,24 @@ timeout: 5
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
 
-### 19,0  Fix `/boot` Permissions
+### 16,0  Fix `/boot` Permissions
 ```shell
 chmod 755 /boot
 chmod 600 /boot/limine.conf
 ```
 
-### 20.0 Sign Boot Files
-```shell
-sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
-sbctl sign -s /boot/vmlinuz-linux
-sbctl sign -s /boot/initramfs-linux.img
-sbctl sign -s /boot/initramfs-linux-fallback.img
-sbctl sign -s /boot/amd-ucode.img   # Skip if Intel  
-sbctl sign -s /boot/intel-ucode.img # Skip if AMD
-```
-#### Verify:
-```shell
-sbctl verify
-```
-
-### 21.0 Automate Signing on Updates
-```shell
-nano /etc/pacman.d/hooks/100-sign-secureboot.hook
-```
-
-```conf
-[Trigger]
-Type = Path
-Operation = Upgrade
-Target = boot://vmlinuz-linux
-Target = boot://initramfs-linux.img
-Target = boot://amd-ucode.img
-Target = boot://intel-ucode.img
-
-[Action]
-Description = Signing EFI binaries for Secure Boot
-When = PostTransaction
-Exec = /usr/bin/sbctl sign-all
-```
-
-### 22.0 Secure `/tmp` Mount Options
+### 17.0 Secure `/tmp` Mount Options
 #### Edit `/etc/fstab`:
 ```
 nano /etc/fstab
 ```
 #### Find the `/tmp` line and update options:
 ```shell
-/dev/vg/tmp    /tmp    ext4    defaults,noatime,nosuid,nodev,noexec,auto    0 0
+/dev/vg/tmp    /tmp    ext4    defaults,noatime,nosuid,nodev,auto    0 0
 ```
 Prevents execution, device files, and suid abuse on `/tmp`
 
-### 23.0 (Optional) Clear `/tmp` on Boot
+### 18.0 (Optional) Clear `/tmp` on Boot
 ```shell
 echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
@@ -504,28 +446,13 @@ umount -R /mnt
 reboot
 ```
 
-## Post Reboot
-
-#### 1. Enroll MOK Key
-- Blue MokManager screen appears
-- Follow prompts to enroll key using the password you set
-- After success, disable Setup Mode in UEFI settings
-
-#### 2. Enable Secure Boot
-In UEFI Firmware:
-
-- Secure Boot: `Enabled`
-- Mode: User Mode or `Custom Mode`
-- Setup Mode: `Disabled`
-
 ## Verify Installation
 #### After logging in:
 ```shell
-mokutil --sb-state            # Should say "Secure boot enabled"
-sbctl status                  # Should show enrolled keys and signed binaries
-lsblk                         # Confirm /var, /tmp, swap LVs
-swapon --show                 # Verify swap active
-dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
+lsblk                   # Confirm /var, /tmp, swap LVs
+swapon --show           # Verify swap active
+dmesg | grep -i "crypt" # Confirm LUKS decryption loaded
+cat /boot/limine.conf   # Confirm bootloader config
 ```
 
 ## You Now Have:
@@ -533,13 +460,11 @@ dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
 
 ✅ Separate `/`, `/home`, `/var`, `/tmp`
 
-✅ LVM-based swap volume (no swap file)
+✅ LVM-based swap volume
 
-✅ `limine` bootloader with Secure Boot
+✅ `limine` bootloader without Secure Boot
 
-✅ Automated kernel signing via `sbctl`
-
-✅ Hardened `/tmp` with `noexec,nodev,nosuid`
+✅ Hardened `/tmp` with `nodev,nosuid`
 
 ✅ UTC time, proper locales, networking
 
