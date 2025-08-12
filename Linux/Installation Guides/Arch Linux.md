@@ -443,16 +443,15 @@ nano /etc/pacman.d/hooks/100-sign-secureboot.hook
 [Trigger]
 Type = Path
 Operation = Upgrade
-Target = /boot/vmlinuz-linux
-Target = /boot/initramfs-linux.img
-Target = /boot/amd-ucode.img
-Target = /boot/intel-ucode.img
+Target = boot://vmlinuz-linux
+Target = boot://initramfs-linux.img
+Target = boot://amd-ucode.img
+Target = boot://intel-ucode.img
 
 [Action]
 Description = Signing EFI binaries for Secure Boot
 When = PostTransaction
 Exec = /usr/bin/sbctl sign-all
-NeedsTargets
 ```
 
 #### Reboot and Enroll Key (MokManager)
