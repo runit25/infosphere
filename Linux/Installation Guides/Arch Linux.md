@@ -7,45 +7,48 @@ Installation includes full disk encryption (LUKS2 + LVM), limine bootloader (Sec
 **Note:** substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
 
 ## Pre-installation
-### Verify boot mode
-#### If you're using UEFI, `/sys/firmware/efi/efivars` should exist
+### 1.0 Verify UEFI Boot Mode
+#### Ensure you're in UEFI mode:
 ```shell
-# If the directory doesn't exist, you're using Legacy BIOS mode and this guide won't work
 ls /sys/firmware/efi/efivars
 ```
+If the directory exists you're free to continue
 
-### Set locale keyboard
+### 2.0 Set Keyboard Layout
 ```shell
 localectl set-keymap uk
 ```
 
-### Connect to the internet with Wi-Fi
+### 3.0 Connect to the Internet 
 ```shell
-iwctl
-device list # list the devices
-station <wlan> scan # scan for networks
-station <wlan> get-networks # list the networks
-station <wlan> connect <SSID> # connect to the network
+# Wired should connect automatically
+ping -c 3 archlinux.org
 
-# test connection
-ping archlinux.org
+# Wi-Fi (use iwd)
+iwctl
+device list                # Identify your wireless interface (e.g., wlan0)
+station wlan0 scan         # Scan available networks
+station wlan0 get-networks # List available networks
+station wlan0 connect SSID # Replace SSID with your network name
+exit
+
+ping -c 3 archlinux.org
 ```
 
-#### Display your disks and partitions
+### 4.0 List Disks
 ```shell
 lsblk
+
+# Example output:
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+nvme0n1     259:0    0 476.9G  0 disk 
+├─nvme0n1p1 259:1    0     1G  0 part 
+└─nvme0n1p2 259:2    0 475.9G  0 part 
+
+# We will be installing Linux on 'nvme0n1'
 ```
 
-```shell
-# example output:
-|NAME           | MAJ:MIN | RM | SIZE   | RO  | TYPE  | MOUNTPOINT |
-| ------------- | ------- | -- | ------ | --- | ----- | ---------- |
-|nvme0n1        |  259:0  | 0  | 476.9G |  0  | disk  |            |
-|├─nvme0n1p1    |  259:4  | 0  |        |  0  | part  |            |
-|├─nvme0n1p2    |  259:5  | 0  |        |  0  | part  |            |
-```
-
-### Partition the disk
+### 5.0 Partition the Disk
 ```shell
 cfdisk /dev/nvme0n1
 # delete existing partition to make room for your new partition scheme
@@ -70,8 +73,9 @@ select [ Write ]
 |2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
 ```
 
-### Encrypt the root partition (luks2)
-#### Modern System (4+ CPU cores, 16 GB+ RAM)
+### 6.0 Encrypt Root Partition (LUKS2)
+#### Select based on your hardware
+#### Modern System (4+ cores, 16GB+ RAM)
 ```shell
 cryptsetup luksFormat \
   --type luks2 \
@@ -88,7 +92,7 @@ cryptsetup luksFormat \
   /dev/nvme0n1p2
 ```
 
-#### Mid-Range Systems (2–4 CPU cores, 8 GB RAM)
+#### Mid-Range (2–4 cores, 8GB RAM)
 ```shell
 cryptsetup luksFormat \
   --type luks2 \
@@ -105,7 +109,7 @@ cryptsetup luksFormat \
   /dev/nvme0n1p2
 ```
 
-#### Low-End Systems (2 CPU cores, 4 GB RAM or less)
+#### Low-End (2 cores, 2-4GB RAM)
 ```shell
 cryptsetup luksFormat \
   --type luks2 \
@@ -121,325 +125,338 @@ cryptsetup luksFormat \
   --label arch_root_encrypted \
   /dev/nvme0n1p2
 ```
+You'll be prompted for a passphrase
 
-### Open the encrypted partition
+### 7.0 Open Encrypted Volume
 ```shell
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
 ```
 
-### Create LVM Physical Volume and Volume Group
+### 8.0 Create LVM Physical Volume & Volume Group
 ```shell
 pvcreate /dev/mapper/lukspart
 vgcreate vg /dev/mapper/lukspart
 ```
 
-### Create Logical Volumes for `/` and `/home`
+### 9.0 Create Logical Volumes
+#### create dedicated LVs for better isolation and security:
 ```shell
-# Root: 50G (adjust as needed)
-lvcreate -L 50G vg -n root
+# Root: OS and packages (20G)
+lvcreate -L 20G vg -n root
 
-# Home: rest of the space
+# /var: logs, caches, databases (20G)
+lvcreate -L 20G vg -n var
+
+# /tmp: temporary files (8G)
+lvcreate -L 8G vg -n tmp
+
+# Swap: 4G (adjust to match RAM if hibernating)
+lvcreate -L 4G vg -n swap
+
+# /home: remaining space
 lvcreate -l 100%FREE vg -n home
 ```
+Adjust sizes based on total disk:
 
-### Format and Mount Filesystems
+`256G` Reduce `/var` to `10G`, `/tmp` to `4G`
+
+### 10.0 Format Filesystems
 ```shell
-# Format root
-mkfs.ext4 -L "Arch Root" /dev/vg/root
+mkfs.ext4 -L "Arch Root"   /dev/vg/root
+mkfs.ext4 -L "Arch Var"    /dev/vg/var
+mkfs.ext4 -L "Arch Tmp"    /dev/vg/tmp
+mkfs.ext4 -L "Arch Home"   /dev/vg/home
+mkswap /dev/vg/swap         # Format swap LV
+```
 
-# Format home
-mkfs.ext4 -L "Arch Home" /dev/vg/home
-
-# Mount root
+### 11.0 Mount Filesystems
+```shell
+# Mount root first
 mount /dev/vg/root /mnt
 
-# Create and mount home
-mkdir /mnt/home
+# Create and mount other directories
+mkdir -p /mnt/{home,var,tmp,boot}
 mount /dev/vg/home /mnt/home
-```
+mount /dev/vg/var  /mnt/var
+mount /dev/vg/tmp  /mnt/tmp
 
-### Prepare the EFI partition
-```shell
+# Prepare and mount EFI partition
 mkfs.fat -F32 /dev/nvme0n1p1
-mkdir -p /mnt/boot
 mount /dev/nvme0n1p1 /mnt/boot
 ```
+`/boot` is unencrypted (required for UEFI boot)
 
 ## Arch Base Installation
-### Install necessary packages
-(openssh) is optional, but be sure to install it if you're going to use (SSH)
+#### Install Essential Packages
 ```shell
 pacstrap -K /mnt base base-devel linux linux-firmware polkit git mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
+`openssh` is optional — include if using SSH
 
-## Configure your system
-### Generate the fstab file
+## Configure the System
+### 1.0 Generate fstab
 ```shell
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-### Chroot into the system
+### 2.0 Chroot into New System
 ```shell
 arch-chroot /mnt
 ```
 
-#### By this point you should have the following partitions and logical volumes:
+#### `lsblk` should look similar to this:
 ```shell
 lsblk
 ```
 
 ```shell
-# Expected output
-| NAME          | MAJ:MIN | RM | SIZE   | RO | TYPE  | MOUNTPOINT |
-| ------------- | ------- | -- | ------ | -- | ----- | ---------- |
-| nvme0n1       | 259:0   | 0  | 476.9G | 0  | disk  |            |
-| ├─nvme0n1p1   | 259:1   | 0  |     1G | 0  | part  | /boot      |
-| └─nvme0n1p2   | 259:2   | 0  | 475.9G | 0  | part  |            |
-|   └─lukspart  | 254:0   | 0  | 475.9G | 0  | crypt |            |
-|     ├─vg-root | 254:1   | 0  |    50G | 0  | lvm   | /          |
-|     └─vg-home | 254:2   | 0  | 425.9G | 0  | lvm   | /home      |
+# output
+NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+nvme0n1       259:0    0 476.9G  0 disk  
+├─nvme0n1p1   259:1    0     1G  0 part  /boot
+└─nvme0n1p2   259:2    0 475.9G  0 part  
+  └─lukspart  254:0    0 475.9G  0 crypt 
+    ├─vg-root 254:1    0    20G  0 lvm   /
+    ├─vg-var  254:2    0    20G  0 lvm   /var
+    ├─vg-tmp  254:3    0     8G  0 lvm   /tmp
+    ├─vg-swap 254:4    0     4G  0 lvm   [SWAP]
+    └─vg-home 254:5    0 423.9G  0 lvm   /home
 ```
 
-### Configuring Locales
-#### Secure Time and Locale
+### 3.0 Set Time and Locale
 ```shell
 timedatectl set-ntp true
-timedatectl set-timezone UTC  # More secure; avoids DST issues
+timedatectl set-timezone UTC      # Avoids DST issues
 hwclock --systohc --utc
 ```
 
-#### Uncomment `en_GB.UTF-8 UTF-8` in:
+#### Uncomment `en_GB.UTF-8 UTF-8`: (Adjust accordingly)
 ```shell
 nano /etc/locale.gen
-```
 
-```diff
--#en_GB.UTF-8 UTF-8
-+en_GB.UTF-8 UTF-8
-```
+# uncomment 
+en_GB.UTF-8 UTF-8
 
-#### Regenerate locale file
-```shell
+# Generate locale:
 locale-gen
 ```
 
-#### set locale language, time and keyboard
+#### Set system locale: (Adjust accordingly)
 ```shell
 localectl set-locale LANG="en_GB.UTF-8"
 localectl set-locale LC_TIME="en_GB.UTF-8"
 echo "KEYMAP=uk" > /etc/vconsole.conf
 ```
 
-### Network configuration
-#### Create a hostname file
+### 4.0 Network Configuration
+#### Set hostname:
 ```shell
 echo myhostname > /etc/hostname
 ```
 
-Note: This is a unique name used to identify your machine on a network
-
-#### Add matching entries to hosts
+#### Edit `/etc/hosts`:
 ```shell
 nano /etc/hosts
+
+# Include:
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   myhostname.localdomain   myhostname
 ```
 
+### 5.0 Enable Swap
 ```shell
-127.0.0.1 localhost
-::1       localhost
-127.0.1.1 myhostname
+swapon /dev/vg/swap
 ```
 
-### Set up 4G swap file
+#### Verify:
 ```shell
-# Create the directory for swap file
-mkdir /var/swap
-chmod 755 /var/swap
-
-# Create swap file (4G)
-dd if=/dev/zero of=/var/swap/swapfile bs=1M count=4096 status=progress
-chmod 600 /var/swap/swapfile
-
-# Format as swap
-mkswap /var/swap/swapfile
-swapon /var/swap/swapfile
-
-# Add to fstab
-echo '/var/swap/swapfile none swap defaults,noauto,sw 0 0' >> /etc/fstab
+swapon --show
 ```
 
-### Initramfs
-#### Add `encrypt` hook to `/etc/mkinitcpio.conf`
-Note: ordering matters
+#### Ensure it's in fstab:
 ```shell
+echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
+```
+`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` in `/etc/lvm/lvm.conf`)
+
+### 6.0 Initramfs Configuration
+#### Edit `/etc/mkinitcpio.conf`:
+```shell
+nano /etc/mkinitcpio.conf
+```
+
+#### Ensure `encrypt` and `lvm2` hooks are in correct order:
+```conf
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
 
-### Recreate the initramfs image
+#### Rebuild initramfs:
 ```shell
 mkinitcpio -P
 ```
 
-### Enable networking services
+### 7.0 Enable Networking Services
 ```shell
 systemctl enable dhcpcd
 systemctl enable iwd.service
-systemctl enable sshd # Optionally enable if you're going to use SSH
+systemctl enable sshd    # Optional: enable SSH
 ```
 
-#### Install microcode for the latest CPU features and security updates
+### 8.0 Install Microcode
+#### For AMD:
 ```shell
-# AMD CPU:
-pacman -S amd-ucode 
-# Intel CPU:
-pacman -S intel-ucode
+pacman -S amd-ucode
+```
 
+#### For Intel:
+```shell
+pacman -S intel-ucode
+```
+
+#### Rebuild initramfs again:
+```shell
 mkinitcpio -p linux
 ```
 
-### Graphical Drivers
-#### Intell/AMD Cards
+### 9.0 Install Graphics Drivers
+#### Intel/AMD:
 ```shell
 pacman -S mesa
 ```
 
-#### Enable multilib
-```shell
-# Uncomment the `[multilib]` section in `/etc/pacman.conf`:
+#### Enable Multilib (for 32-bit apps, Steam, etc.)
+##### Uncomment in `/etc/pacman.conf`:
+```conf
 [multilib]
 Include = /etc/pacman.d/mirrorlist
+```
 
-# refresh your package databases
+##### Update:
+```shell
 pacman -Syu
 ```
 
-### Set your Root password
-```shell 
+### 10.0  Set Root Password
+```shell
 passwd
 ```
 
-### Add Linux User
+### 11.0 Add User
 ```shell
 useradd -m -G wheel,storage,power -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### Opendoas (doas) allows you to run commands as root
+### 12.0 12. Install `opendoas`
 ```shell
 pacman -S opendoas
+```
 
-# Allow <yourusername> to execute root commands
+#### Allow user to run commands as root:
+```shell
 echo "permit persist keepenv yourusername" > /etc/doas.conf
-
-# Restrict `/etc/doas.conf` permissions
 chmod 600 /etc/doas.conf
 ```
 
-#### (Optional) Set up a sudo alias for opendoas; Recommended if you're going to use (.sh scripts)
+#### Optional: Add `sudo` alias:
 ```shell
 echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
-### Install limine and sbctl
+### 13.0 Install `limine` and `sbctl`
 ```shell
 pacman -S limine sbctl
 ```
 
-### Generate Secure Boot Keys
+### 14.0 Generate Secure Boot Keys
 ```shell
 sbctl generate-keys
 ```
+Creates:
 
-#### `sbctl generate-keys` creates: 
-```shell
-/var/db/sbctl/owner.key # private
+`/var/db/sbctl/owner.key` (private)
 
-/var/db/sbctl/owner.crt # public, to be enrolled
-```
+`/var/db/sbctl/owner.crt` (public)
 
-### Enroll Keys via MokManager
+### 15.0 Enroll Keys via MokManager
 ```shell
 sbctl enroll-keys --mok
-
-# This adds a key to the MOK (Machine Owner Key) list.
-
-On next boot, the MokManager (blue screen) will appear.
-
-You must:
-
-1. Select "Enroll MOK"
-
-2. Select "Continue"
-
-3. Select "Yes"
-
-4. Enter the password you set during generate-keys
-
-After this, the system will trust your signed binaries.
 ```
+You'll be prompted for a PEM password — remember it!
 
-### Copy limine UEFI Bootloader
+#### On next boot:
+
+1. Blue MokManager screen appears
+2. Select "Enroll MOK"
+3. "Continue" → "Yes"
+4. Enter the password you set
+After enrollment, disable Setup Mode in firmware.
+
+### 16.0 Install `limine` Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### receive UUID for `/boot/limine.conf`
+### 17.0 Get LUKS Partition UUID
 ```shell
 blkid -s UUID -o value /dev/nvme0n1p2
-
-# Example output: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
 ```
+Remember the output (e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
 
-### Create `/boot/limine.conf`:
+### Create `/boot/limine.conf`
 ```shell
 nano /boot/limine.conf
 ```
 
-```shell
-# Designates a 5 second timer until Limine automatically boots
+#### replace (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`... with actual UUID):
+```conf
 timeout: 5
 
 /Arch Linux (linux)
     protocol: linux
     path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img   # Remove this line if using Intel
-    module_path: boot:/intel-ucode.img # Remove this line if using AMD
+    module_path: boot:/amd-ucode.img        # Remove if Intel
+    module_path: boot:/intel-ucode.img      # Remove if AMD
     module_path: boot:/initramfs-linux.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
 /Arch Linux (linux-fallback)
     protocol: linux
     path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img   # Remove this line if using Intel
-    module_path: boot:/intel-ucode.img # Remove this line if using AMD
+    module_path: boot:/amd-ucode.img        # Remove if Intel
+    module_path: boot:/intel-ucode.img      # Remove if AMD
     module_path: boot:/initramfs-linux-fallback.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
-
 ```
 
-### Fix `/boot` Permissions
+### 19,0  Fix `/boot` Permissions
 ```shell
 chmod 755 /boot
 chmod 600 /boot/limine.conf
 ```
 
-### Sign Bootloader and Kernel
+### 20.0 Sign Boot Files
 ```shell
 sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
 sbctl sign -s /boot/vmlinuz-linux
 sbctl sign -s /boot/initramfs-linux.img
 sbctl sign -s /boot/initramfs-linux-fallback.img
-sbctl sign -s /boot/amd-ucode.img        # Use intel-ucode.img for Intel
+sbctl sign -s /boot/amd-ucode.img   # Skip if Intel  
+sbctl sign -s /boot/intel-ucode.img # Skip if AMD
+```
+#### Verify:
+```shell
+sbctl verify
 ```
 
-Run `sbctl verify` to confirm all files are signed
-
-### Automate Signing on Updates
+### 21.0 Automate Signing on Updates
 ```shell
 nano /etc/pacman.d/hooks/100-sign-secureboot.hook
 ```
 
-```shell
+```conf
 [Trigger]
 Type = Path
 Operation = Upgrade
@@ -454,57 +471,76 @@ When = PostTransaction
 Exec = /usr/bin/sbctl sign-all
 ```
 
-#### Reboot and Enroll Key (MokManager)
+### 22.0 Secure `/tmp` Mount Options
+#### Edit `/etc/fstab`:
+```
+nano /etc/fstab
+```
+#### Find the `/tmp` line and update options:
 ```shell
-# Exit chroot and reboot
+/dev/vg/tmp    /tmp    ext4    defaults,noatime,nosuid,nodev,noexec,auto    0 0
+```
+Prevents execution, device files, and suid abuse on `/tmp`
+
+### 23.0 (Optional) Clear `/tmp` on Boot
+```shell
+echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
+```
+Clears files older than 1 day. Use `0` instead of `1d` to wipe every boot.
+
+## Finalize and Reboot
+#### Exit chroot:
+```shell
 exit
+```
+
+#### Unmount all:
+```shell
 umount -R /mnt
+```
+
+#### Reboot:
+```shell
 reboot
 ```
 
-##### On reboot: 
-```shell
-MokManager will appear (blue screen)
+## Post Reboot
 
-Follow prompts to enroll your key
+#### 1. Enroll MOK Key
+- Blue MokManager screen appears
+- Follow prompts to enroll key using the password you set
+- After success, disable Setup Mode in UEFI settings
 
-After enrollment, disable Setup Mode
-```
+#### 2. Enable Secure Boot
+In UEFI Firmware:
 
-### Enable Secure Boot in Firmware
-#### After key enrollment:
-```shell
-Reboot into UEFI settings
+- Secure Boot: `Enabled`
+- Mode: User Mode or `Custom Mode`
+- Setup Mode: `Disabled`
 
-Enable:
-
-Secure Boot = Enabled
-
-Mode = User Mode or Custom Mode
-
-Setup Mode = False
-
-Save and exit
-```
-
-### Verify Secure Boot is Active
-#### After booting:
+## Verify Installation
+#### After logging in:
 ```shell
 mokutil --sb-state            # Should say "Secure boot enabled"
-sbctl status                  # Should show "Enrolled keys", "Signed binaries"
-dmesg | grep -i "secure boot" # Should confirm enabled
+sbctl status                  # Should show enrolled keys and signed binaries
+lsblk                         # Confirm /var, /tmp, swap LVs
+swapon --show                 # Verify swap active
+dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
 ```
 
-You now have a fully encrypted, securely booted Arch Linux system with:
+## You Now Have:
+✅ Full disk encryption (LUKS2 + LVM)
 
-LUKS2 + LVM
+✅ Separate `/`, `/home`, `/var`, `/tmp`
 
-ext4 root/home
+✅ LVM-based swap volume (no swap file)
 
-limine bootloader
+✅ `limine` bootloader with Secure Boot
 
-Secure Boot via sbctl
+✅ Automated kernel signing via `sbctl`
 
-Proper key enrollment
+✅ Hardened `/tmp` with `noexec,nodev,nosuid`
 
-Automated signing
+✅ UTC time, proper locales, networking
+
+✅ Minimal, secure, maintainable base
