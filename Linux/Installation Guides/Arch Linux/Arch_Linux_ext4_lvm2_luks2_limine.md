@@ -189,7 +189,7 @@ mount /dev/nvme0n1p1 /mnt/boot
 ## Arch Base Installation
 #### Install Essential Packages
 ```shell
-pacstrap -K /mnt base base-devel linux linux-firmware git mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap -K /mnt base linux linux-firmware mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 `openssh` is optional — include if using SSH
 
@@ -335,6 +335,11 @@ Include = /etc/pacman.d/mirrorlist
 ##### Update:
 ```shell
 pacman -Syu
+```
+
+### Required to install AUR packages (optional)
+```shell
+pacman -S base-devel git
 ```
 
 ### 10.0  Set Root Password
