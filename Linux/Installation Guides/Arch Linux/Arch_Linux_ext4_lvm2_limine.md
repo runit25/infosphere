@@ -131,7 +131,7 @@ mount /dev/nvme0n1p1 /mnt/boot
 ```shell
 pacstrap -K /mnt base linux linux-firmware mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
-`openssh` is optional — include if using SSH
+`openssh` (optional) remove unless you use ssh
 
 ## Configure the System
 ### 1.0 Generate fstab
@@ -239,7 +239,7 @@ mkinitcpio -P
 ```shell
 systemctl enable dhcpcd
 systemctl enable iwd.service
-systemctl enable sshd        # Optional: enable SSH
+systemctl enable sshd        # Enable if you installed openssh
 ```
 
 ### 8.0 Install Microcode
