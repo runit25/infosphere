@@ -368,7 +368,7 @@ echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
 Clears files older than 1 day. Use `0` instead of `1d` to wipe every boot.
 
-## Randomize MAC Address
+## Randomize MAC Address (Privacy Enhancement)
 ### 1.0 Configure iwd to Randomize MAC
 ```shell
 mkdir -p /var/lib/iwd
