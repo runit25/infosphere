@@ -493,6 +493,53 @@ echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
 Clears files older than 1 day. Use `0` instead of `1d` to wipe every boot.
 
+## Randomize MAC Address
+### 1.0 Configure iwd to Randomize MAC
+```shell
+mkdir -p /var/lib/iwd
+nano /var/lib/iwd/main.conf
+```
+
+```shell
+# Include the following
+
+[General]
+EnableNetworkConfiguration=true
+
+[Network]
+NameResolvingService=systemd
+
+[Device]
+# Randomize MAC address on every boot
+AddressRandomization=once
+
+# Optional: Use different randomized MAC per network (recommended)
+# AddressRandomization=stable
+```
+once: Generates a new random MAC at each boot
+
+stable: Uses a unique but randomized MAC per network
+
+### 2.0 Restart iwd to Apply Changes
+```shell
+systemctl restart iwd
+```
+
+### 3.0 Verify Randomization
+#### Check your wireless interface MAC:
+```shell
+ip link show wlan0
+```
+Look for `ether xx:xx:xx:xx:xx:xx` — it should differ from your hardware (permanent) MAC
+
+### 4.0 Reconnect to Wi-Fi
+#### If needed:
+```shell
+iwctl station wlan0 disconnect
+iwctl station wlan0 connect SSID
+```
+Note: Some networks (e.g., enterprise, captive portals) may require consistent MAC addresses. Adjust AddressRandomization as needed
+
 ## Finalize and Reboot
 #### Exit chroot:
 ```shell
@@ -547,5 +594,7 @@ dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
 ✅ Hardened `/tmp` with `nodev,nosuid`
 
 ✅ UTC time, proper locales, networking
+
+✅ MAC address randomization for privacy
 
 ✅ Minimal, secure, maintainable base
