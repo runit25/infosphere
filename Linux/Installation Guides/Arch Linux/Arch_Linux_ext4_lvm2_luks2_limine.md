@@ -12,7 +12,7 @@ Installation includes full disk encryption (LUKS2 + LVM), limine bootloader, ext
 ```shell
 ls /sys/firmware/efi/efivars
 ```
-If the directory exists you're free to continue
+If the directory exists you're free to continue.
 
 ### 2.0 Set Keyboard Layout
 ```shell
@@ -46,15 +46,16 @@ ping -c 3 archlinux.org
 ### 4.0 List Disks
 ```shell
 lsblk
+```
 
-# Example output:
+#### Example output:
+```shell
 NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
 nvme0n1     259:0    0 476.9G  0 disk 
 ├─nvme0n1p1 259:1    0     1G  0 part 
 └─nvme0n1p2 259:2    0 475.9G  0 part 
-
-# We will be installing Linux on 'nvme0n1'
 ```
+We will be installing Linux on `nvme0n1`.
 
 ### 5.0 Partition the Disk
 ```shell
@@ -82,7 +83,7 @@ select [ Write ]
 ```
 
 ### 6.0 Encrypt Root Partition (LUKS2)
-#### Select based on your hardware
+#### Select based on your hardware:
 #### Modern System (4+ cores, 16GB+ RAM)
 ```shell
 cryptsetup luksFormat \
@@ -133,12 +134,13 @@ cryptsetup luksFormat \
   --label arch_root_encrypted \
   /dev/nvme0n1p2
 ```
-You'll be prompted for a passphrase
+You'll be prompted for a passphrase.
 
 ### 7.0 Open Encrypted Volume
 ```shell
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
 ```
+This exposes the decrypted volume at `/dev/mapper/lukspart`.
 
 ### 8.0 Create LVM Physical Volume & Volume Group
 ```shell
@@ -178,21 +180,26 @@ mkswap /dev/vg/swap        # Format swap LV
 ```
 
 ### 11.0 Mount Filesystems
+#### Mount root first:
 ```shell
 # Mount root first
 mount /dev/vg/root /mnt
+```
 
-# Create and mount other directories
+#### Create and mount other directories:
+```shell
 mkdir -p /mnt/{home,var,tmp,boot}
 mount /dev/vg/home /mnt/home
 mount /dev/vg/var  /mnt/var
 mount /dev/vg/tmp  /mnt/tmp
+```
 
-# Prepare and mount EFI partition
+#### Format and mount EFI partition:
+```shell
 mkfs.fat -F32 /dev/nvme0n1p1
 mount /dev/nvme0n1p1 /mnt/boot
 ```
-`/boot` is unencrypted (required for UEFI boot)
+`/boot` must remain unencrypted for UEFI boot. 
 
 ## Arch Base Installation
 #### Install Essential Packages
@@ -212,11 +219,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt
 ```
 
-#### `lsblk` should look similar to this:
-```shell
-lsblk
-```
-
+#### Expected `lsblk` output:
 ```shell
 # output
 NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
@@ -441,9 +444,9 @@ Prevents execution, device files, and suid abuse on `/tmp`
 ```shell
 echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
-Clears files older than 1 day. Use `0` instead of `1d` to wipe every boot.
+Clears files older than 1 day. Use 0 to wipe every boot.
 
-## Randomize MAC Address (Privacy Enhancement)
+## Privacy: Randomize MAC Address
 ### 1.0 Configure iwd for MAC Randomization
 #### Create the global configuration file:
 ```shell
@@ -488,7 +491,7 @@ AddressRandomization=stable
 
 ✅ I recommend using `stable` unless you have compatibility issues.
 
-### 2.0 Restart iwd to Apply Changes
+### 2.0 Restart `iwd` to Apply Changes
 ```shell
 systemctl restart iwd
 ```

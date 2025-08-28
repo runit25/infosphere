@@ -12,7 +12,7 @@ Installation includes full disk encryption (LUKS2 + LVM), limine bootloader (Sec
 ```shell
 ls /sys/firmware/efi/efivars
 ```
-If the directory exists you're free to continue
+If the directory exists you're free to continue.
 
 ### 2.0 Set Keyboard Layout
 ```shell
@@ -46,15 +46,16 @@ ping -c 3 archlinux.org
 ### 4.0 List Disks
 ```shell
 lsblk
+```
 
-# Example output:
+#### Example output:
+```shell
 NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
 nvme0n1     259:0    0 476.9G  0 disk 
 ├─nvme0n1p1 259:1    0     1G  0 part 
 └─nvme0n1p2 259:2    0 475.9G  0 part 
-
-# We will be installing Linux on 'nvme0n1'
 ```
+We will be installing Linux on `nvme0n1`.
 
 ### 5.0 Partition the Disk
 ```shell
@@ -82,7 +83,7 @@ select [ Write ]
 ```
 
 ### 6.0 Encrypt Root Partition (LUKS2)
-#### Select based on your hardware
+#### Select based on your hardware:
 #### Modern System (4+ cores, 16GB+ RAM)
 ```shell
 cryptsetup luksFormat \
@@ -133,12 +134,13 @@ cryptsetup luksFormat \
   --label arch_root_encrypted \
   /dev/nvme0n1p2
 ```
-You'll be prompted for a passphrase
+You'll be prompted for a passphrase.
 
 ### 7.0 Open Encrypted Volume
 ```shell
 cryptsetup luksOpen /dev/nvme0n1p2 lukspart
 ```
+This exposes the decrypted volume at `/dev/mapper/lukspart`.
 
 ### 8.0 Create LVM Physical Volume & Volume Group
 ```shell
@@ -178,21 +180,26 @@ mkswap /dev/vg/swap        # Format swap LV
 ```
 
 ### 11.0 Mount Filesystems
+#### Mount root first:
 ```shell
 # Mount root first
 mount /dev/vg/root /mnt
+```
 
-# Create and mount other directories
+#### Create and mount other directories:
+```shell
 mkdir -p /mnt/{home,var,tmp,boot}
 mount /dev/vg/home /mnt/home
 mount /dev/vg/var  /mnt/var
 mount /dev/vg/tmp  /mnt/tmp
+```
 
-# Prepare and mount EFI partition
+#### Format and mount EFI partition:
+```shell
 mkfs.fat -F32 /dev/nvme0n1p1
 mount /dev/nvme0n1p1 /mnt/boot
 ```
-`/boot` is unencrypted (required for UEFI boot)
+`/boot` must remain unencrypted for UEFI boot. 
 
 ## Arch Base Installation
 #### Install Essential Packages
@@ -212,11 +219,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt
 ```
 
-#### `lsblk` should look similar to this:
-```shell
-lsblk
-```
-
+#### Expected `lsblk` output:
 ```shell
 # output
 NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
@@ -238,19 +241,14 @@ timedatectl set-timezone UTC # Avoids DST issues
 hwclock --systohc --utc
 ```
 
-#### Uncomment `en_GB.UTF-8 UTF-8`: (Adjust accordingly)
+#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen`: (Adjust accordingly)
 ```shell
 nano /etc/locale.gen
-
-# uncomment 
-en_GB.UTF-8 UTF-8
-
-# Generate locale:
-locale-gen
 ```
 
-#### Set system locale: (Adjust accordingly)
+#### Generate and set locale: (Adjust accordingly)
 ```shell
+locale-gen
 localectl set-locale LANG="en_GB.UTF-8"
 localectl set-locale LC_TIME="en_GB.UTF-8"
 echo "KEYMAP=uk" > /etc/vconsole.conf
@@ -273,6 +271,7 @@ nano /etc/hosts
 ```
 
 ### 5.0 Enable Swap
+#### Activate:
 ```shell
 swapon /dev/vg/swap
 ```
@@ -282,11 +281,11 @@ swapon /dev/vg/swap
 swapon --show
 ```
 
-#### Ensure it's in fstab:
+#### Ensure it's in `fstab`:
 ```shell
 echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
 ```
-`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` in `/etc/lvm/lvm.conf`)
+`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` in `/etc/lvm/lvm.conf`).
 
 ### 6.0 Initramfs Configuration
 #### Edit `/etc/mkinitcpio.conf`:
@@ -294,7 +293,7 @@ echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
 nano /etc/mkinitcpio.conf
 ```
 
-#### Ensure `encrypt` and `lvm2` hooks are in correct order:
+#### Ensure `hooks` include `encrypt` and lvm2 in order:
 ```conf
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
@@ -333,7 +332,7 @@ mkinitcpio -p linux
 pacman -S mesa
 ```
 
-#### Enable Multilib (for 32-bit apps, Steam, etc.)
+#### Enable Multilib (for 32-bit apps, Steam, etc.):
 ##### Uncomment in `/etc/pacman.conf`:
 ```conf
 [multilib]
@@ -345,7 +344,7 @@ Include = /etc/pacman.d/mirrorlist
 pacman -Syu
 ```
 
-### Required to install AUR packages (optional)
+### Required to install AUR packages (optional):
 ```shell
 pacman -S base-devel git
 ```
@@ -388,9 +387,8 @@ sbctl generate-keys
 ```
 Creates:
 
-`/var/db/sbctl/owner.key` (private)
-
-`/var/db/sbctl/owner.crt` (public)
+- Private: `/var/db/sbctl/owner.key`
+- Public: `/var/db/sbctl/owner.crt`
 
 ### 15.0 Enroll Keys via MokManager
 ```shell
@@ -416,14 +414,13 @@ cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```shell
 blkid -s UUID -o value /dev/nvme0n1p2
 ```
-Remember the output (e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+Remember the output (e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
 
 ### Create `/boot/limine.conf`
 ```shell
 nano /boot/limine.conf
 ```
 
-#### replace (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`... with actual UUID):
 ```conf
 timeout: 5
 
@@ -443,6 +440,7 @@ timeout: 5
     module_path: boot:/initramfs-linux-fallback.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
+replace (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`... with actual UUID):
 
 ### 19,0  Fix `/boot` Permissions
 ```shell
@@ -499,9 +497,9 @@ Prevents execution, device files, and suid abuse on `/tmp`
 ```shell
 echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
-Clears files older than 1 day. Use `0` instead of `1d` to wipe every boot.
+Clears files older than 1 day. Use 0 to wipe every boot.
 
-## Randomize MAC Address (Privacy Enhancement)
+## Privacy: Randomize MAC Address
 ### 1.0 Configure iwd for MAC Randomization
 #### Create the global configuration file:
 ```shell
@@ -546,7 +544,7 @@ AddressRandomization=stable
 
 ✅ I recommend using `stable` unless you have compatibility issues.
 
-### 2.0 Restart iwd to Apply Changes
+### 2.0 Restart `iwd` to Apply Changes
 ```shell
 systemctl restart iwd
 ```
@@ -766,20 +764,20 @@ dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
 ## You Now Have:
 ✅ Full disk encryption (LUKS2 + LVM)
 
-✅ Separate `/`, `/home`, `/var`, `/tmp`
+✅ Isolated `/`, `/home`, `/var`, `/tmp`
 
-✅ LVM-based swap volume
+✅ LVM-based swap
 
-✅ `limine` bootloader with Secure Boot
+✅ `limine` with Secure Boot
 
-✅ Automated kernel signing via `sbctl`
+✅ Automated kernel signing (`sbctl`)
 
-✅ Hardened `/tmp` with `nodev,nosuid`
+✅ Hardened `/tmp` (`nodev,nosuid`)
 
-✅ UTC time, proper locales, networking
+✅ UTC time, correct locales, networking
 
-✅ MAC address randomization for privacy
+✅ MAC address randomization
 
-✅ Encrypted, Filtered DNS
+✅ Encrypted, filtered DNS
 
 ✅ Minimal, secure, maintainable base
