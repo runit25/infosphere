@@ -1,4 +1,4 @@
-# Arch Linux Install
+# Arch Linux Install Guide
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
@@ -149,7 +149,7 @@ vgcreate vg /dev/mapper/lukspart
 ```
 
 ### 9.0 Create Logical Volumes
-#### create dedicated LVs for better isolation and security:
+#### Create dedicated logical volumes for better isolation and security:
 ```shell
 # Root: OS and packages (20G)
 lvcreate -L 20G vg -n root
@@ -166,9 +166,10 @@ lvcreate -L 4G vg -n swap
 # /home: remaining space
 lvcreate -l 100%FREE vg -n home
 ```
-Adjust sizes based on total disk:
+Adjust sizes based on total disk space. For example, on a 256G drive:
 
-`256G` Reduce `/var` to `10G`, `/tmp` to `4G`
+- Reduce `/var` to `10G`
+- Reduce `/tmp` to `4G`
 
 ### 10.0 Format Filesystems
 ```shell
@@ -182,7 +183,6 @@ mkswap /dev/vg/swap        # Format swap LV
 ### 11.0 Mount Filesystems
 #### Mount root first:
 ```shell
-# Mount root first
 mount /dev/vg/root /mnt
 ```
 
@@ -289,7 +289,7 @@ swapon --show
 ```shell
 echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
 ```
-`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` in `/etc/lvm/lvm.conf`)
+`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` is set in `/etc/lvm/lvm.conf`).
 
 ### 6.0 Initramfs Configuration
 #### Edit `/etc/mkinitcpio.conf`:
@@ -397,12 +397,11 @@ blkid -s UUID -o value /dev/nvme0n1p2
 ```
 Remember the output (e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
 
-### Create `/boot/limine.conf`
+### 16.0 Create `/boot/limine.conf`
 ```shell
 nano /boot/limine.conf
 ```
 
-#### replace (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`... with actual UUID):
 ```conf
 timeout: 5
 
@@ -422,14 +421,15 @@ timeout: 5
     module_path: boot:/initramfs-linux-fallback.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
+Replace `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` with the actual UUID obtained earlier.
 
-### 16,0  Fix `/boot` Permissions
+### 17,0  Fix `/boot` Permissions
 ```shell
 chmod 755 /boot
 chmod 600 /boot/limine.conf
 ```
 
-### 17.0 Secure `/tmp` Mount Options
+### 18.0 Secure `/tmp` Mount Options
 #### Edit `/etc/fstab`:
 ```
 nano /etc/fstab
@@ -444,7 +444,7 @@ Prevents execution, device files, and suid abuse on `/tmp`
 ```shell
 echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
-Clears files older than 1 day. Use 0 to wipe every boot.
+This uses `systemd-tmpfiles` to clean `/tmp` on boot. The `1d` means files older than 1 day are deleted. Change to `0` to clear all contents on every boot.
 
 ## Privacy: Randomize MAC Address
 Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
@@ -458,12 +458,12 @@ Consult: [Arch_Linux_DNS+Filtering](<https://gitlab.com/runit25/infosphere/-/blo
 exit
 ```
 
-#### Unmount all:
+#### Unmount all partitions:
 ```shell
 umount -R /mnt
 ```
 
-#### Reboot:
+#### Reboot into the new system:
 ```shell
 reboot
 ```
