@@ -1,5 +1,5 @@
 ## Privacy: Randomize MAC Address
-### 1.0 Configure iwd for MAC Randomization
+### 1.0 Configure `iwd` for MAC Randomization
 #### Create the global configuration file:
 ```shell
 mkdir -p /var/lib/iwd
@@ -16,8 +16,8 @@ EnableNetworkConfiguration=true
 NameResolvingService=systemd
 
 [Network]
-# Prevent probing for default route on every network
-DisableDefaultRoute=false
+# Disable automatic probing for default gateway on every network (recommended)
+DisableDefaultRoute=true
 
 # Optional: Prevent DNS from being set by DHCP
 # DisableDNSFromDHCP=true
@@ -32,16 +32,19 @@ AddressRandomization=stable
 # OPTIONAL: Disable Wi-Fi power saving (can improve stability)
 # PowerSave=false
 ```
+Note: `DisableDefaultRoute=true` means the system will not automatically set a default gateway when connecting to a network. This enhances privacy on public Wi-Fi by reducing exposure. 
 
 #### Explanation of `AddressRandomization` options:
 
-- `stable`: Generates a unique, persistent randomized MAC per network (SSID). Best balance of privacy and usability.
+- `stable`: Uses a unique, persistent randomized MAC derived from a hash of the SSID. Provides strong privacy while avoiding re-authentication on known networks.
 
-- `once`: Uses a new random MAC at each boot, same across all networks until reboot.
+(Default in many modern distros like Fedora, Ubuntu)
 
-- `disabled`: Uses your real hardware MAC (not recommended for privacy).
+- `once`: Assigns a new random MAC at each boot, used across all networks until reboot. Less private than `stable`, but more compatible.
 
-✅ I recommend using `stable` unless you have compatibility issues.
+- `disabled`: Uses your real hardware (burned-in) MAC address — not recommended for privacy.
+
+✅ Recommendation: Use `stable` unless you encounter connectivity issues.
 
 ### 2.0 Restart `iwd` to Apply Changes
 ```shell
@@ -49,24 +52,72 @@ systemctl restart iwd
 ```
 
 ### 3.0 Verify MAC Randomization
-#### Check your wireless interface (replace `wlan0` if different):
+#### Check the current MAC address:
 ```shell
 ip link show wlan0
 ```
-Look for the `ether` field:
+Replace `wlan0` with your actual wireless interface (e.g., `wlp2s0`, `wifi0`). 
 
-- If randomized, it will not match your hardware (burned-in) MAC.
-- The permanent MAC can be found with:
-
+#### Look for the `ether` field in the output:
 ```shell
-cat /sys/class/net/wlan0/address_mask
+link/ether xx:xx:xx:xx:xx:xx brd ...
+```
+- If MAC randomization is active, this address will differ from your hardware (burned-in) MAC.
+
+- It should not match your device’s original factory-assigned MAC.
+
+#### Find the permanent (hardware) MAC address:
+```shell
+ethtool -P wlan0
+```
+Replace `wlan0` with your actual wireless interface name (e.g., `wlp2s0`, `wifi0`, etc.). 
+
+Example output:
+```shell
+Permanent address: aa:bb:cc:dd:ee:ff
 ```
 
-🛑 Troubleshooting Tip: If connection fails after enabling randomization, try switching to `once` and/or temporarily disable it. 
+If `ethtool` is not installed:
+```shell
+doas pacman -S ethtool
+```
+Verification: Compare the `Permanent address` (from `ethtool`) with the `ether` address (from `ip link`).
+If they are different, MAC randomization is working.
+
+- Note: On VMs or certain hardware, the addresses may appear identical — this could mean randomization is not supported or failed. 
 
 ### 4.0 Reconnect to Wi-Fi (If Needed)
+#### If you were already connected, disconnect and reconnect to apply the new MAC:
 ```shell
 iwctl station wlan0 disconnect
 iwctl station wlan0 connect YOUR_SSID
 ```
-Note: Some networks (e.g., enterprise, captive portals) may require consistent MAC addresses. Adjust AddressRandomization as needed
+Replace `YOUR_SSID` with your Wi-Fi network name.
+
+You may be prompted to re-enter the password. 
+
+### Important Notes
+
+- `stable` mode: A unique random MAC is generated per SSID. Balances privacy and convenience.
+
+#### Some networks may block randomized MACs:
+
+- Enterprise networks (corporate, school)
+
+- Captive portals (hotels, airports)
+
+- Networks that bind access to your MAC address
+
+#### In such cases, temporarily change the config:
+```shell
+[Device]
+AddressRandomization=once
+```
+
+or
+
+```
+[Device]
+AddressRandomization=disabled
+```
+then reconnect to the network.
