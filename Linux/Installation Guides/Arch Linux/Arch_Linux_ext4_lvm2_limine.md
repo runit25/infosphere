@@ -180,19 +180,14 @@ timedatectl set-timezone UTC # Avoids DST issues
 hwclock --systohc --utc
 ```
 
-#### Uncomment `en_GB.UTF-8 UTF-8`: (Adjust accordingly)
+#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen`: (Adjust accordingly)
 ```shell
 nano /etc/locale.gen
-
-# uncomment 
-en_GB.UTF-8 UTF-8
-
-# Generate locale:
-locale-gen
 ```
 
-#### Set system locale: (Adjust accordingly)
+#### Generate and set locale: (Adjust accordingly)
 ```shell
+locale-gen
 localectl set-locale LANG="en_GB.UTF-8"
 localectl set-locale LC_TIME="en_GB.UTF-8"
 echo "KEYMAP=uk" > /etc/vconsole.conf
@@ -411,20 +406,20 @@ cat /etc/fstab        # Ensure no cryptdevice entries
 ```
 
 ## You Now Have:
-✅ Standard installation
+- Standard installation
 
-✅ Isolated `/`, `/home`, `/var`, `/tmp`
+- Isolated `/`, `/home`, `/var`, `/tmp`
 
-✅ LVM-based swap
+- LVM-based swap
 
-✅ `limine` bootloader (no Secure Boot)
+- `limine` bootloader (no Secure Boot)
 
-✅ Hardened `/tmp` with `nodev,nosuid`
+- Hardened `/tmp` with `nodev,nosuid`
 
-✅ UTC time, proper locales, networking
+- UTC time, proper locales, networking
 
-✅ MAC address randomization
+- MAC address randomization
 
-✅ Encrypted, Filtered DNS
+- Encrypted, Filtered DNS
 
-✅ Minimal, maintainable base
+- Minimal, maintainable base

@@ -44,7 +44,7 @@ Note: `DisableDefaultRoute=true` means the system will not automatically set a d
 
 - `disabled`: Uses your real hardware (burned-in) MAC address — not recommended for privacy.
 
-✅ Recommendation: Use `stable` unless you encounter connectivity issues.
+Recommendation: Use `stable` unless you encounter connectivity issues.
 
 ### 2.0 Restart `iwd` to Apply Changes
 ```shell

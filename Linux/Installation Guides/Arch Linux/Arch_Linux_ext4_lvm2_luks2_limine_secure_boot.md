@@ -82,57 +82,9 @@ select [ Write ]
 |2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
 ```
 
-### 6.0 Encrypt Root Partition (LUKS2)
-#### Select based on your hardware:
-#### Modern System (4+ cores, 16GB+ RAM)
+### 6.0 Encrypt Root Partition (LUKS2):
 ```shell
-cryptsetup luksFormat \
-  --type luks2 \
-  --cipher aes-xts-plain64 \
-  --key-size 512 \
-  --hash sha512 \
-  --pbkdf argon2id \
-  --iter-time 7500 \
-  --pbkdf-memory 1048576 \
-  --pbkdf-parallel 4 \
-  --sector-size 512 \
-  --align-payload 8192 \
-  --label arch_root_encrypted \
-  /dev/nvme0n1p2
-```
-
-#### Mid-Range (2–4 cores, 8GB RAM)
-```shell
-cryptsetup luksFormat \
-  --type luks2 \
-  --cipher aes-xts-plain64 \
-  --key-size 512 \
-  --hash sha512 \
-  --pbkdf argon2id \
-  --iter-time 5000 \
-  --pbkdf-memory 524288 \
-  --pbkdf-parallel 2 \
-  --sector-size 512 \
-  --align-payload 8192 \
-  --label arch_root_encrypted \
-  /dev/nvme0n1p2
-```
-
-#### Low-End (2 cores, 2-4GB RAM)
-```shell
-cryptsetup luksFormat \
-  --type luks2 \
-  --cipher aes-xts-plain64 \
-  --key-size 512 \
-  --hash sha512 \
-  --pbkdf argon2id \
-  --iter-time 3000 \
-  --pbkdf-memory 262144 \
-  --pbkdf-parallel 1 \
-  --sector-size 512 \
-  --align-payload 8192 \
-  --label arch_root_encrypted \
-  /dev/nvme0n1p2
+cryptsetup luksFormat /dev/nvme0n1p2
 ```
 You'll be prompted for a passphrase.
 
@@ -549,22 +501,22 @@ dmesg | grep -i "secure boot" # Confirm kernel sees Secure Boot
 ```
 
 ## You Now Have:
-✅ Full disk encryption (LUKS2 + LVM)
+- Full disk encryption (LUKS2 + LVM)
 
-✅ Isolated `/`, `/home`, `/var`, `/tmp`
+- Isolated `/`, `/home`, `/var`, `/tmp`
 
-✅ LVM-based swap
+- LVM-based swap
 
-✅ `limine` with Secure Boot
+- `limine` with Secure Boot
 
-✅ Automated kernel signing (`sbctl`)
+- Automated kernel signing (`sbctl`)
 
-✅ Hardened `/tmp` with `nodev,nosuid`
+- Hardened `/tmp` with `nodev,nosuid`
 
-✅ UTC time, proper locales, networking
+- UTC time, proper locales, networking
 
-✅ MAC address randomization
+- MAC address randomization
 
-✅ Encrypted, filtered DNS
+- Encrypted, filtered DNS
 
-✅ Minimal, secure, maintainable base
+- Minimal, secure, maintainable base

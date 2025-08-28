@@ -80,10 +80,10 @@ done < <(curl -s "$BLOCKLIST_URL")
 # Only replace if download succeeded
 if [ -s "$TEMP_OUTPUT" ]; then
     doas mv "$TEMP_OUTPUT" "$OUTPUT"
-    echo "✅ Blocklist updated from official OISD source: $OUTPUT"
+    echo "Blocklist updated from official OISD source: $OUTPUT"
     doas systemctl reload unbound
 else
-    echo "❌ Failed to fetch blocklist. Keeping previous version."
+    echo "Failed to fetch blocklist. Keeping previous version."
     rm -f "$TEMP_OUTPUT"
     exit 1
 fi
