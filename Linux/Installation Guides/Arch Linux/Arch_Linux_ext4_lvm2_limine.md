@@ -18,20 +18,28 @@ If the directory exists you're free to continue
 ```shell
 localectl set-keymap uk
 ```
+Adjust keymap as needed (e.g., us, de). 
 
 ### 3.0 Connect to the Internet 
-```shell
-# Wired should connect automatically
-ping -c 3 archlinux.org
 
-# Wi-Fi (use iwd)
+#### Wired (DHCP):
+```shell
+ping -c 3 archlinux.org
+```
+
+#### Wi-Fi (using `iwd`):
+
+```shell
 iwctl
-device list                # Identify your wireless interface (e.g., wlan0)
-station wlan0 scan         # Scan available networks
-station wlan0 get-networks # List available networks
+device list                # Identify interface (e.g., wlan0)
+station wlan0 scan         # Scan networks
+station wlan0 get-networks # List networks
 station wlan0 connect SSID # Replace SSID with your network name
 exit
+```
 
+#### Test connectivity:
+```shell
 ping -c 3 archlinux.org
 ```
 
