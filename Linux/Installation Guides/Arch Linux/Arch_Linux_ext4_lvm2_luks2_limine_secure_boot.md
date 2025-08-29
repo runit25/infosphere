@@ -245,8 +245,10 @@ echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
 nano /etc/mkinitcpio.conf
 ```
 
-#### Ensure `hooks` include `encrypt` and lvm2 in order:
+#### Place `encrypt` and `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
 ```conf
+MODULES=(vfat)
+
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
 

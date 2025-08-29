@@ -231,8 +231,10 @@ echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
 nano /etc/mkinitcpio.conf
 ```
 
-#### Ensure the `lvm2` hook is in the correct order:
+#### Place `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
 ```conf
+MODULES=(vfat)
+
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block lvm2 filesystems fsck)
 ```
 
