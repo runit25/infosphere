@@ -84,7 +84,7 @@ select [ Write ]
 
 ### 6.0 Encrypt Root Partition (LUKS2):
 ```shell
-cryptsetup luksFormat /dev/nvme0n1p2
+cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --iter-time 5000 --key-size 256 --pbkdf argon2id /dev/nvme0n1p2
 ```
 You'll be prompted for a passphrase.
 
