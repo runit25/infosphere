@@ -356,18 +356,18 @@ timeout: 5
 
 /Arch Linux (linux)
     protocol: linux
-    path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img        # Remove if Intel
-    module_path: boot:/intel-ucode.img      # Remove if AMD
-    module_path: boot:/initramfs-linux.img
+    path: boot():/vmlinuz-linux
+    module_path: boot():/amd-ucode.img        # Remove if Intel
+    module_path: boot():/intel-ucode.img      # Remove if AMD
+    module_path: boot():/initramfs-linux.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 
 /Arch Linux (linux-fallback)
     protocol: linux
-    path: boot:/vmlinuz-linux
-    module_path: boot:/amd-ucode.img        # Remove if Intel
-    module_path: boot:/intel-ucode.img      # Remove if AMD
-    module_path: boot:/initramfs-linux-fallback.img
+    path: boot():/vmlinuz-linux
+    module_path: boot():/amd-ucode.img        # Remove if Intel
+    module_path: boot():/intel-ucode.img      # Remove if AMD
+    module_path: boot():/initramfs-linux-fallback.img
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
 Replace `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` with the actual UUID obtained earlier.
