@@ -144,7 +144,7 @@ mount /dev/nvme0n1p1 /mnt/boot
 ## Arch Base Installation
 #### Install Essential Packages
 ```shell
-pacstrap -K /mnt base linux linux-firmware mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap /mnt base linux linux-firmware mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 `openssh` (optional) remove unless you use ssh
 
