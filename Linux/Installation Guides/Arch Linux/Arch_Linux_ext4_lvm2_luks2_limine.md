@@ -156,7 +156,7 @@ mount /dev/nvme0n1p1 /mnt/boot
 ## Arch Base Installation
 #### Install Essential Packages
 ```shell
-pacstrap /mnt base linux linux-firmware mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap /mnt base linux linux-firmware lvm2 mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
 `openssh` (optional) remove unless you use ssh
 
@@ -369,6 +369,12 @@ timeout: 5
     cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
 Replace `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` with the actual UUID obtained earlier.
+
+### 16.5 hotfix test
+```shell
+limine-install /dev/nvme0n1
+```
+Replace `/dev/nvme0n1` with your actual disk (not partition), e.g., `/dev/sda`.
 
 ### 17,0  Fix `/boot` Permissions
 ```shell
