@@ -232,16 +232,9 @@ swapon /dev/vg/swap
 swapon --show
 ```
 
-#### Ensure it's in fstab:
+#### Ensure it's in `fstab`:
 ```shell
-echo '/dev/vg/swap none swap defaults,discard 0 0' >> /etc/fstab
-```
-`discard` enables TRIM (only if your SSD supports it and `issue_discards = 1` is set in `/etc/lvm/lvm.conf`).
-
-### 6.0 Initramfs Configuration
-#### Edit `/etc/mkinitcpio.conf`:
-```shell
-nano /etc/mkinitcpio.conf
+echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
 ```
 
 #### Place `encrypt` and `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
