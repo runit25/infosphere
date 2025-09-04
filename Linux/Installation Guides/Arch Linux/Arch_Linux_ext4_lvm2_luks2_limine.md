@@ -313,9 +313,10 @@ pacman -S opendoas
 
 #### Allow user to run commands as root:
 ```shell
-echo "permit persist keepenv yourusername" > /etc/doas.conf
+echo "permit persist yourusername" > /etc/doas.conf
 chmod 600 /etc/doas.conf
 ```
+`persist` preserves password authentication for five minutes.
 
 #### Optional: Add `sudo` alias:
 ```shell
