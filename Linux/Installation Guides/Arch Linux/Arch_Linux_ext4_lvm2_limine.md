@@ -84,8 +84,8 @@ select [ Write ]
 
 ### 6.0 Create LVM Physical Volume & Volume Group
 ```shell
-pvcreate /dev/mapper/lukspart
-vgcreate vg /dev/mapper/lukspart
+pvcreate /dev/nvme0n1p2
+vgcreate vg /dev/nvme0n1p2
 ```
 
 ### 7.0 Create Logical Volumes
