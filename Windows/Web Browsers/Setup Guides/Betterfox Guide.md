@@ -1,6 +1,4 @@
-# Firefox Guides
-
-## BetterFox Guide
+# BetterFox Guide
 
 1. **Download BetterFox:**
 
