@@ -24,10 +24,11 @@
 
 ***
 
-### uBlock Origin Guide
+### uBlock Origin Lite Guide
 
-**Ungoogled Chromium uBlock Origin Guide**
-- Download [uBlock Origin](<https://github.com/gorhill/uBlock/releases>) here by selecting `uBlock0_x.xx.x.chromium.zip` under assets
-- Head to `chrome://extensions`, check mark `Developer mode` top right
-- Unzip `uBlock0_x.xx.x.chromium.zip`
-- Load unpacked > Select `uBlock0.chromium
+**uBlock Origin Lite Guide**
+
+Download [uBlock Origin Lite](<https://chromewebstore.google.com/detail/ddkjiahejlhfcafbddmgiahcphecmpfh>) here by pressing **Add to Chrome** followed by the `add extension` prompt.
+- Configure `uBlock Origin Lite` for optimal content blocking capabilities by selecting the puzzle icon top right and clicking on the uBlock Origin Lite icon followed by the `gear cog`.
+- Adjust Default filtering mode to `Complete`
+- Navigate to Filter lists and checkmark all the boxes above `Regions, languages`
