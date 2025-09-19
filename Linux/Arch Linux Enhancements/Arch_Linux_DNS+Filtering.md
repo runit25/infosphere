@@ -11,48 +11,59 @@ doas unbound-anchor -a /etc/unbound/root.key
 This enables DNSSEC validation for all queries. 
 
 ### Step 3.0: Configure Unbound with Local Filtering + DoT
-#### place the contents of `/etc/unbound/unbound.conf` with the following:
+#### Backup default config (optional):
 ```shell
-# Optional: Backup default config
 doas cp /etc/unbound/unbound.conf /etc/unbound/unbound.conf.bak
+```
 
+#### Edit the main configuration file:
+```shell
 doas nano /etc/unbound/unbound.conf
 ```
 
-#### Full Configuration (with Local Filtering & DoT)
 ```shell
+include: /etc/unbound/adblock.conf
+
 server:
     # Listen locally
     interface: 127.0.0.1
     access-control: 127.0.0.1/32 allow
 
-    # Privacy & security
+    # IPv6 (optional, if enabled on system)
+    # interface: ::1
+    # access-control: ::1/128 allow
+
+    # Enhance privacy
     hide-identity: yes
     hide-version: yes
     use-caps-for-id: yes
     qname-minimisation: yes
     edns-cookie: yes
 
-    # DNSSEC
-    val-log-level: 1
-    harden-dnssec-stripped: yes
-    trust-anchor-file: /var/lib/unbound/root.key
-
-    # Caching
+    # Improve performance
+    prefetch: yes
+    prefetch-key: yes
     cache-max-ttl: 86400
     msg-cache-size: 128m
 
-    # Forward to multiple encrypted providers
+    # Enforce DNSSEC
+    val-log-level: 1
+    harden-dnssec-stripped: yes
+    trust-anchor-file: /etc/unbound/root.key
+
+    # Forward queries over encrypted DNS (DoT)
     forward-zone:
         name: "."
         forward-tls-upstream: yes
+        forward-addr: 9.9.9.9@853           # Quad9 (malware blocking)
+        forward-addr: 149.112.112.112@853   # Quad9 backup
 
-        # Primary: Quad9 (malware blocking, no logs)
-        forward-addr: 9.9.9.9@853#dns.quad9.net
-
-        # Secondary: Quad9 backup
-        forward-addr: 149.112.112.112@853#dns.quad9.net
+    # Log blocked domains (optional for debugging)
+    log-local-actions: yes
 ```
+Quad9 blocks known malware domains by default.
+
+Use `journalctl -u unbound -f | grep "local_data"` to monitor blocked domains.
 
 ### Step 4.0: Add Local Filtering (Block Ads, Trackers, Malware)
 #### We'll use the OISD blocklist, one of the most reliable and well-maintained ad/tracker blocklists.
@@ -60,87 +71,163 @@ server:
 doas nano /usr/local/bin/update-blocklist.sh
 ```
 
-```
+```shell
 #!/bin/bash
+
+set -euo pipefail
+
 BLOCKLIST_URL="https://oisd.nl/domainsonly"
 OUTPUT="/etc/unbound/adblock.conf"
-TEMP_OUTPUT="/etc/unbound/adblock.conf.tmp"
+TEMP_OUTPUT="${OUTPUT}.tmp"
 
-echo "# OISD Ad/Tracker Blocklist - $(date)" > "$TEMP_OUTPUT"
+echo "Fetching blocklist from: $BLOCKLIST_URL"
+
+DOMAINS=$(curl -sf --max-time 30 "$BLOCKLIST_URL")
+if [ -z "$DOMAINS" ]; then
+    echo "ERROR: Failed to fetch blocklist. Check URL or network."
+    exit 1
+fi
+
+{
+    echo "# OISD Ad/Tracker Blocklist - $(date -u)"
+    echo "# Source: $BLOCKLIST_URL"
+    echo ""
+} > "$TEMP_OUTPUT"
 
 while IFS= read -r domain; do
     case "$domain" in
         \#*|"") continue ;;
         *)
-            printf 'local-zone: "%s" reject\n' "$domain" >> "$TEMP_OUTPUT"
+            # Basic validation: alphanumeric, dots, hyphens, underscores only
+            if [[ "$domain" =~ ^[a-zA-Z0-9._-]+$ ]] && [ ${#domain} -le 253 ]; then
+                printf 'local-zone: "%s" redirect\nlocal-data: "%s A 0.0.0.0"\n' "$domain" "$domain"
+            else
+                echo "Skipping invalid domain: $domain" >&2
+            fi
             ;;
     esac
-done < <(curl -s "$BLOCKLIST_URL")
+done <<< "$DOMAINS" >> "$TEMP_OUTPUT"
 
-# Only replace if download succeeded
-if [ -s "$TEMP_OUTPUT" ]; then
-    doas mv "$TEMP_OUTPUT" "$OUTPUT"
-    echo "Blocklist updated from official OISD source: $OUTPUT"
-    doas systemctl reload unbound
-else
-    echo "Failed to fetch blocklist. Keeping previous version."
+if [ ! -s "$TEMP_OUTPUT" ]; then
+    echo "ERROR: Generated blocklist is empty."
     rm -f "$TEMP_OUTPUT"
     exit 1
 fi
+
+# Validate config before applying
+if ! doas unbound-checkconf; then
+    echo "ERROR: Current Unbound config is invalid. Aborting update."
+    rm -f "$TEMP_OUTPUT"
+    exit 1
+fi
+
+doas mv "$TEMP_OUTPUT" "$OUTPUT"
+doas chown root:unbound "$OUTPUT"
+doas chmod 644 "$OUTPUT"
+
+echo "Blocklist updated: $OUTPUT"
+doas systemctl reload unbound
+
+echo "Done. $(grep -c '^local-zone' "$OUTPUT") domains blocked."
 ```
 
-#### Make executable and run:
+#### Make script executable:
 ```shell
 doas chmod +x /usr/local/bin/update-blocklist.sh
-doas /usr/local/bin/update-blocklist.sh
 ```
-This creates `/etc/unbound/adblock.conf` with thousands of ad/tracker domains blocked locally. 
 
-### Step 5.0: Automate Blocklist Updates (Daily)
+### Step 5.0: Automate Blocklist Updates with systemd
+#### Create service unit:
+```shell
+doas systemctl edit --force --full unbound-blocklist.service
+```
+
+```shell
+[Unit]
+Description=Update Unbound Ad Blocklist
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-blocklist.sh
+User=root
+RemainAfterExit=yes
+```
+
+#### Create timer unit:
 ```shell
 doas systemctl edit --force --full unbound-blocklist.timer
 ```
-#### Create Timer:
+
 ```shell
 [Unit]
 Description=Update Unbound Ad Blocklist Daily
+After=network-online.target
+Wants=network-online.target
 
 [Timer]
 OnCalendar=daily
 Persistent=true
+RandomizedDelaySec=1h
 
 [Install]
 WantedBy=timers.target
 ```
+`RandomizedDelaySec=1h` prevents server load spikes.
 
+#### Enable and start timer:
 ```shell
-doas systemctl enable unbound-blocklist.timer
-doas systemctl start unbound-blocklist.timer
+doas systemctl daemon-reload
+doas systemctl enable --now unbound-blocklist.timer
 ```
 
-### Step 6.0: Point System to Local Resolver
+#### Check timer status:
 ```shell
-doas systemctl enable systemd-resolved
-doas systemctl start systemd-resolved
+systemctl list-timers | grep unbound
 ```
 
-#### Symlink:
+### Step 6.0: Configure System DNS to Use Unbound
 ```shell
-doas ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+doas nano /etc/resolv.conf
 ```
+
+#### Replace the contents with:
+```shell
+nameserver 127.0.0.1
+# nameserver ::1     # Uncomment if using IPv6
+options edns0
+```
+This file may be overwritten by DHCP or network managers.
+
+#### Prevent overwrites:
+```shell
+doas chattr +i /etc/resolv.conf
+```
+Revert with `doas chattr -i /etc/resolv.conf` if needed. 
 
 #### Ensure `iwd` doesn't override DNS:
-```
-# Edit /var/lib/iwd/main.conf
-doas nano /var/lib/iwd/main.conf
+```shell
+doas nano /etc/iwd/main.conf
 ```
 
-```
+#### And ensure it contains:
+```shell
 [Network]
 DisableDNSFromDHCP=true
 ```
 
-### Step 7.0: Verify Everything Works
+#### restart iwd:
+```shell
+doas systemctl restart iwd
+```
+
+### Step 7.0: Start and Enable Unbound
+```shell
+doas systemctl enable --now unbound
+```
+
+### Step 8.0: Verify Everything Works
 #### Test normal resolution:
 ```shell
 dig @127.0.0.1 google.com +short
@@ -149,16 +236,21 @@ dig @127.0.0.1 google.com +short
 #### Test blocking:
 ```shell
 dig @127.0.0.1 doubleclick.net
+# Should return: 0.0.0.0
 ```
-Should return `NXDOMAIN` (indicating blocked) or no records.
 
 #### Test DNSSEC failure:
 ```shell
 dig @127.0.0.1 dnssec-failed.org
+# Should return: status: SERVFAIL
 ```
-Should return `SERVFAIL` due to invalid DNSSEC — confirms validation is active. 
 
-#### Check logs:
+#### Review live logs:
 ```shell
-journalctl -u unbound -f
+journalctl -u unbound -f --since "1 min ago"
+```
+
+#### Check blocklist timer:
+```shell
+systemctl list-timers | grep unbound
 ```
