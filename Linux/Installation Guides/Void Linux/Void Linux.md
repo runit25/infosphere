@@ -85,9 +85,7 @@ lvcreate -L 4G   vg -n swap
 # /home: remaining space
 lvcreate -l 100%FREE vg -n home
 ```
-Adjust sizes based on total disk:
-
-`256G` Reduce `/var` to `10G`, `/tmp` to `4G`
+Adjust lvm volumes accordingly. (**Example:** "`256G drive` Reduce `/var` to `10G`, `/tmp` to `4G`")
 
 ### 8.0 Format Filesystems
 ```shell
