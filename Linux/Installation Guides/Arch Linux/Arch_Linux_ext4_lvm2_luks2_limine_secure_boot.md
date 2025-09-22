@@ -47,15 +47,7 @@ ping -c 3 archlinux.org
 ```shell
 lsblk
 ```
-
-#### Example output:
-```shell
-NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-nvme0n1     259:0    0 476.9G  0 disk 
-├─nvme0n1p1 259:1    0     1G  0 part 
-└─nvme0n1p2 259:2    0 475.9G  0 part 
-```
-We will be installing Linux on `nvme0n1`.
+Identify your target disk (e.g., `/dev/nvme0n1`)
 
 ### 5.0 Partition the Disk
 ```shell
@@ -118,10 +110,7 @@ lvcreate -L 4G vg -n swap
 # /home: remaining space
 lvcreate -l 100%FREE vg -n home
 ```
-Adjust sizes based on total disk space. For example, on a 256G drive:
-
-- Reduce `/var` to `10G`
-- Reduce `/tmp` to `4G`
+Adjust lvm volumes accordingly. (**Example:** "`256G drive` Reduce `/var` to `10G`, `/tmp` to `4G`")
 
 ### 10.0 Format Filesystems
 ```shell
@@ -133,21 +122,17 @@ mkswap /dev/vg/swap        # Format swap LV
 ```
 
 ### 11.0 Mount Filesystems
-#### Mount root first:
 ```shell
+# Mount root first:
 mount /dev/vg/root /mnt
-```
 
-#### Create and mount other directories:
-```shell
+# Create and mount other directories:
 mkdir -p /mnt/{home,var,tmp,boot}
 mount /dev/vg/home /mnt/home
 mount /dev/vg/var  /mnt/var
 mount /dev/vg/tmp  /mnt/tmp
-```
 
-#### Format and mount EFI partition:
-```shell
+# Format and mount EFI partition:
 mkfs.fat -F32 /dev/nvme0n1p1
 mount /dev/nvme0n1p1 /mnt/boot
 ```
@@ -268,7 +253,7 @@ pacman -S amd-ucode
 pacman -S intel-ucode
 ```
 
-#### Rebuild initramfs again:
+#### Regenerate initramfs to include microcode:
 ```shell
 mkinitcpio -p linux
 ```
