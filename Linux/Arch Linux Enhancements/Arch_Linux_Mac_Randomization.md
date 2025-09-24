@@ -2,8 +2,8 @@
 ### 1.0 Configure `iwd` for MAC Randomization
 #### Create the global configuration file:
 ```shell
-mkdir -p /var/lib/iwd
-nano /var/lib/iwd/main.conf
+mkdir -p /etc/iwd
+nano /etc/iwd/main.conf
 ```
 
 #### Add the following content:
