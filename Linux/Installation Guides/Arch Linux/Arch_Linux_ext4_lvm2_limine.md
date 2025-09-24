@@ -345,13 +345,12 @@ chmod 600 /boot/limine.conf
 ```
 
 ### 17.0 Secure `/tmp` Mount Options
-#### Edit `/etc/fstab`:
 ```
 nano /etc/fstab
 ```
-#### Find the `/tmp` line and update options:
+#### Find `/tmp` and include `noatime`, `nosuid`, `nodev`
 ```shell
-/dev/vg/tmp    /tmp    ext4    defaults,noatime,nosuid,nodev,auto    0 0
+UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
 ```
 Prevents execution, device files, and suid abuse on `/tmp`
 
