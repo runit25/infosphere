@@ -167,7 +167,7 @@ nvme0n1       259:0    0 476.9G  0 disk
     ├─vg-root 254:1    0    20G  0 lvm   /
     ├─vg-var  254:2    0    20G  0 lvm   /var
     ├─vg-tmp  254:3    0     8G  0 lvm   /tmp
-    ├─vg-swap 254:4    0     4G  0 lvm   [SWAP]
+    ├─vg-swap 254:4    0     4G  0 lvm
     └─vg-home 254:5    0 423.9G  0 lvm   /home
 ```
 
