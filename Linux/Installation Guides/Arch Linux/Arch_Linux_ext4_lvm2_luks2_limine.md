@@ -223,6 +223,10 @@ echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
 ```
 
 #### Place `encrypt` and `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
+```shell
+nano /etc/mkinitcpio.conf
+```
+
 ```conf
 MODULES=(vfat)
 
