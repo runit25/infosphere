@@ -374,7 +374,7 @@ exit
 
 #### Unmount all partitions:
 ```shell
-umount -R /mnt
+umount -l /mnt
 ```
 
 #### Reboot into the new system:

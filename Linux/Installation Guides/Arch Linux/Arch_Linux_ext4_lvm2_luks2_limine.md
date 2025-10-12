@@ -355,12 +355,6 @@ timeout: 5
 ```
 Replace `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` with the actual UUID obtained earlier.
 
-### 16.5 hotfix test
-```shell
-limine-install /dev/nvme0n1
-```
-Replace `/dev/nvme0n1` with your actual disk (not partition), e.g., `/dev/sda`.
-
 ### 17,0  Fix `/boot` Permissions
 ```shell
 chmod 755 /boot
@@ -397,7 +391,7 @@ exit
 
 #### Unmount all partitions:
 ```shell
-umount -R /mnt
+umount -l /mnt
 ```
 
 #### Reboot into the new system:
