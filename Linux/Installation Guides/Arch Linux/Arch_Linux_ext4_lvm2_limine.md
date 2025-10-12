@@ -268,9 +268,9 @@ Include = /etc/pacman.d/mirrorlist
 pacman -Syu
 ```
 
-### Required to install AUR packages (optional)
+### Required to install AUR packages (optional):
 ```shell
-pacman -S base-devel git
+pacman -S binutils make gcc pkg-config fakeroot debugedit git
 ```
 
 ### 10.0  Set Root Password
