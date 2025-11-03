@@ -145,7 +145,7 @@ $logfile = 'C:\Windows\Setup\Scripts\RemovePackages.log';
 		}
 		$result | ConvertTo-Json -Depth 3 -Compress;
 	}
-} *&gt;&amp;1 &gt;&gt; $logfile;
+} *&gt;&amp;1 | Out-String &gt;&gt; $logfile;
 		</File>
 		<File path="C:\Windows\Setup\Scripts\RemoveCapabilities.ps1">
 $selectors = @(
@@ -193,7 +193,7 @@ $logfile = 'C:\Windows\Setup\Scripts\RemoveCapabilities.log';
 		}
 		$result | ConvertTo-Json -Depth 3 -Compress;
 	}
-} *&gt;&amp;1 &gt;&gt; $logfile;
+} *&gt;&amp;1 | Out-String &gt;&gt; $logfile;
 		</File>
 		<File path="C:\Windows\Setup\Scripts\RemoveFeatures.ps1">
 $selectors = @(
@@ -240,7 +240,7 @@ $logfile = 'C:\Windows\Setup\Scripts\RemoveFeatures.log';
 		}
 		$result | ConvertTo-Json -Depth 3 -Compress;
 	}
-} *&gt;&amp;1 &gt;&gt; $logfile;
+} *&gt;&amp;1 | Out-String &gt;&gt; $logfile;
 		</File>
 		<File path="C:\Windows\Setup\Scripts\SetStartPins.ps1">
 $json = '{"pinnedList":[]}';
@@ -358,7 +358,7 @@ $scripts = @(
     "`r`n" * 3;
     $complete += $increment;
   }
-} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
+} *&gt;&amp;1 | Out-String &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
 		</File>
 		<File path="C:\Windows\Setup\Scripts\UserOnce.ps1">
 $scripts = @(
@@ -398,7 +398,7 @@ $scripts = @(
     "`r`n" * 3;
     $complete += $increment;
   }
-} *&gt;&amp;1 &gt;&gt; "$env:TEMP\UserOnce.log";
+} *&gt;&amp;1 | Out-String &gt;&gt; "$env:TEMP\UserOnce.log";
 		</File>
 		<File path="C:\Windows\Setup\Scripts\DefaultUser.ps1">
 $scripts = @(
@@ -470,7 +470,7 @@ $scripts = @(
     "`r`n" * 3;
     $complete += $increment;
   }
-} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
+} *&gt;&amp;1 | Out-String &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
 		</File>
 		<File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
 $scripts = @(
@@ -503,7 +503,7 @@ $scripts = @(
     "`r`n" * 3;
     $complete += $increment;
   }
-} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+} *&gt;&amp;1 | Out-String &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
 		</File>
 	</Extensions>
 </unattend>
