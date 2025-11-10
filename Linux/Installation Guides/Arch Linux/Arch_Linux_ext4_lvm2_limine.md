@@ -215,10 +215,13 @@ echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
 nano /etc/mkinitcpio.conf
 ```
 
-#### Place `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
+#### Place `vfat` into MODULES
 ```conf
 MODULES=(vfat)
+```
 
+#### Replace the `systemd` hook with `udev` and `sd-vconsole` with `consolefont` and include `lvm2` (ordering matters): 
+```conf
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block lvm2 filesystems fsck)
 ```
 

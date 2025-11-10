@@ -223,14 +223,19 @@ swapon --show
 echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
 ```
 
-#### Place `encrypt` and `lvm2` into `HOOKS` (ordering matters) and `vfat` into `MODULES`
+### 6.0 Initramfs Configuration
+#### Edit `/etc/mkinitcpio.conf`:
 ```shell
 nano /etc/mkinitcpio.conf
 ```
 
+#### Place `vfat` into MODULES
 ```conf
 MODULES=(vfat)
+```
 
+#### Replace the `systemd` hook with `udev` and `sd-vconsole` with `consolefont` and include `encrypt`, `lvm2` (ordering matters):
+```conf
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
 
