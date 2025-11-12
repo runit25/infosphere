@@ -409,7 +409,7 @@ cat /etc/fstab        # Ensure no cryptdevice entries
 
 - LVM-based swap
 
-- limine bootloader (no Secure Boot)
+- limine bootloader without Secure Boot
 
 - Hardened /tmp with nodev, nosuid
 

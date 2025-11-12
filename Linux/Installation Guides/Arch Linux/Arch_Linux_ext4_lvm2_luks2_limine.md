@@ -378,6 +378,7 @@ chmod 600 /boot/limine.conf
 ```
 nano /etc/fstab
 ```
+
 #### Find /tmp and include noatime, nosuid, nodev:
 ```shell
 UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
