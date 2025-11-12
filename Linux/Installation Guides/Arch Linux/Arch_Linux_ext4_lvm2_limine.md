@@ -401,22 +401,3 @@ swapon --show         # Verify swap active
 cat /boot/limine.conf # Confirm bootloader config
 cat /etc/fstab        # Ensure no cryptdevice entries
 ```
-
-## You Now Have:
-- Standard installation
-
-- Isolated /, /home, /var, /tmp
-
-- LVM-based swap
-
-- limine bootloader without Secure Boot
-
-- Hardened /tmp with nodev, nosuid
-
-- UTC time, proper locales, networking
-
-- MAC address randomization
-
-- Encrypted, filtered DNS
-
-- Minimal, maintainable base

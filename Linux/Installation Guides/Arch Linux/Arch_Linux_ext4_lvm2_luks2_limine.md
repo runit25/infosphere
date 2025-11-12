@@ -421,22 +421,3 @@ swapon --show           # Verify swap active
 dmesg | grep -i "crypt" # Confirm LUKS decryption loaded
 cat /boot/limine.conf   # Confirm bootloader config
 ```
-
-## You Now Have:
-- Full disk encryption (LUKS2 + LVM)
-
-- Isolated /, /home, /var, /tmp
-
-- LVM-based swap
-
-- limine bootloader without Secure Boot
-
-- Hardened /tmp with nodev, nosuid
-
-- UTC time, proper locales, networking
-
-- MAC address randomization
-
-- Encrypted, filtered DNS
-
-- Minimal, secure, maintainable base
