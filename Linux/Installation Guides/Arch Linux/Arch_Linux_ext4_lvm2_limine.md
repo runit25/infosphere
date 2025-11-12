@@ -4,7 +4,7 @@
 
 Installation includes LVM, limine bootloader, ext4, and base system.
 
-**Note:** Substitute `/dev/nvme0nX` with your corresponding drive (**Example:** "/dev/sda")
+**Note:** Substitute /dev/nvme0nX with your corresponding drive (**Example:** "/dev/sda")
 
 ## Pre-installation
 ### 1.0 Verify UEFI Boot Mode
@@ -27,8 +27,7 @@ Adjust keymap as needed (e.g., us, de).
 ping -c 3 archlinux.org
 ```
 
-#### Wi-Fi (using `iwd`):
-
+#### Wi-Fi (Using IWD):
 ```shell
 iwctl
 device list                # Identify interface (e.g., wlan0)
@@ -47,11 +46,14 @@ ping -c 3 archlinux.org
 ```shell
 lsblk
 ```
-Identify your target disk (e.g., `/dev/nvme0n1`)
+Identify your target disk (e.g., /dev/nvme0n1)
 
 ### 5.0 Partition the Disk
 ```shell
 cfdisk /dev/nvme0n1
+```
+
+```shell
 # delete existing partition to make room for your new partition scheme
 select [ Delete ] 
 
@@ -98,7 +100,7 @@ lvcreate -L 4G vg -n swap
 # /home: remaining space
 lvcreate -l 100%FREE vg -n home
 ```
-Adjust lvm volumes accordingly. (**Example:** "`256G drive` Reduce `/var` to `10G`, `/tmp` to `4G`")
+Adjust lvm volumes accordingly. (**Example:** "256G drive Reduce /var to 10G, /tmp to 4G")
 
 ### 8.0 Format Filesystems
 ```shell
@@ -124,14 +126,14 @@ mount /dev/vg/tmp  /mnt/tmp
 mkfs.fat -F32 /dev/nvme0n1p1
 mount /dev/nvme0n1p1 /mnt/boot
 ```
-`/boot` must remain unencrypted for UEFI boot. 
+/boot must remain unencrypted for UEFI boot. 
 
 ## Arch Base Installation
-#### Install Essential Packages
+#### Install Essential Packages:
 ```shell
 pacstrap /mnt base linux linux-firmware lvm2 mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
-`openssh` (optional) remove unless you use ssh
+openssh (optional) remove unless you use ssh
 
 ## Configure the System
 ### 1.0 Generate fstab
@@ -144,7 +146,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt
 ```
 
-#### Expected `lsblk` output:
+#### Expected lsblk output:
 ```shell
 # output
 NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
@@ -165,12 +167,12 @@ timedatectl set-timezone UTC # Avoids DST issues
 hwclock --systohc --utc
 ```
 
-#### Uncomment `en_GB.UTF-8 UTF-8` in `/etc/locale.gen`: (Adjust accordingly)
+#### Uncomment en_GB.UTF-8 UTF-8 in /etc/locale.gen (Adjust accordingly):
 ```shell
 nano /etc/locale.gen
 ```
 
-#### Generate and set locale: (Adjust accordingly)
+#### Generate and set locale (Adjust accordingly):
 ```shell
 locale-gen
 localectl set-locale LANG="en_GB.UTF-8"
@@ -184,17 +186,19 @@ echo "KEYMAP=uk" > /etc/vconsole.conf
 echo myhostname > /etc/hostname
 ```
 
-#### Edit `/etc/hosts`:
+#### Edit /etc/hosts:
 ```shell
 nano /etc/hosts
+```
 
-# Include:
+```shell
 127.0.0.1   localhost
 ::1         localhost
 127.0.1.1   myhostname.localdomain   myhostname
 ```
 
 ### 5.0 Enable Swap
+#### Activate:
 ```shell
 swapon /dev/vg/swap
 ```
@@ -204,23 +208,23 @@ swapon /dev/vg/swap
 swapon --show
 ```
 
-#### Ensure it's in `fstab`:
+#### Ensure it's in fstab:
 ```shell
 echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
 ```
 
 ### 6.0 Initramfs Configuration
-#### Edit `/etc/mkinitcpio.conf`:
+#### Edit /etc/mkinitcpio.conf:
 ```shell
 nano /etc/mkinitcpio.conf
 ```
 
-#### Place `vfat` into MODULES
+#### Place vfat into MODULES:
 ```conf
 MODULES=(vfat)
 ```
 
-#### Replace the `systemd` hook with `udev` and `sd-vconsole` with `consolefont` and include `lvm2` (ordering matters): 
+#### Replace the systemd hook with udev and sd-vconsole with consolefont and include lvm2 (ordering matters): 
 ```conf
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block lvm2 filesystems fsck)
 ```
@@ -259,19 +263,23 @@ mkinitcpio -p linux
 pacman -S mesa
 ```
 
-#### Enable Multilib (for 32-bit apps, Steam, etc.)
-##### Uncomment in `/etc/pacman.conf`:
+#### Enable multilib:
+```shell
+`nano /etc/pacman.conf`
+```
+
 ```conf
 [multilib]
 Include = /etc/pacman.d/mirrorlist
 ```
+Contains steam, etc.
 
 ##### Update:
 ```shell
 pacman -Syu
 ```
 
-### Required to install AUR packages (optional):
+### Required to install AUR packages (optional)
 ```shell
 pacman -S binutils make gcc pkg-config fakeroot debugedit git
 ```
@@ -287,7 +295,7 @@ useradd -m -G wheel,storage,power -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### 12.0 Install `opendoas`
+### 12.0 Install opendoas
 ```shell
 pacman -S opendoas
 ```
@@ -297,30 +305,29 @@ pacman -S opendoas
 echo "permit persist yourusername" > /etc/doas.conf
 chmod 600 /etc/doas.conf
 ```
-`persist` preserves password authentication for five minutes.
+persist preserves password authentication for five minutes.
 
-#### Optional: Add `sudo` alias:
+#### Optional: Add sudo alias:
 ```shell
 echo "alias sudo=doas" >> /home/yourusername/.bashrc
 ```
 
-### 13.0 Install `limine`
+### 13.0 Install limine
 ```shell
 pacman -S limine
 ```
 
-### 14.0 Install `limine` Bootloader
+### 14.0 Install limine Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 15.0 Create `/boot/limine.conf`
+### 15.0 Create /boot/limine.conf
 ```shell
 nano /boot/limine.conf
 ```
 
-#### replace (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`... with actual UUID):
 ```conf
 timeout: 5
 
@@ -341,27 +348,28 @@ timeout: 5
     cmdline: root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
 ```
 
-### 16,0  Fix `/boot` Permissions
+### 16,0  Fix /boot Permissions
 ```shell
 chmod 755 /boot
 chmod 600 /boot/limine.conf
 ```
 
-### 17.0 Secure `/tmp` Mount Options
+### 17.0 Secure /tmp Mount Options
 ```
 nano /etc/fstab
 ```
-#### Find `/tmp` and include `noatime`, `nosuid`, `nodev`
+
+#### Find /tmp and include noatime, nosuid, nodev:
 ```shell
 UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
 ```
-Prevents execution, device files, and suid abuse on `/tmp`
+Prevents execution, device files, and suid abuse on /tmp
 
-### 18.0 (Optional) Clear `/tmp` on Boot
+### 18.0 (Optional) Clear /tmp on Boot
 ```shell
 echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 ```
-This uses `systemd-tmpfiles` to clean `/tmp` on boot. The `1d` means files older than 1 day are deleted. Change to `0` to clear all contents on every boot.
+This uses systemd-tmpfiles to clean /tmp on boot. The 1d means files older than 1 day are deleted. Change to 0 to clear all contents on every boot.
 
 ## Privacy: Randomize MAC Address
 Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
@@ -397,18 +405,18 @@ cat /etc/fstab        # Ensure no cryptdevice entries
 ## You Now Have:
 - Standard installation
 
-- Isolated `/`, `/home`, `/var`, `/tmp`
+- Isolated /, /home, /var, /tmp
 
 - LVM-based swap
 
-- `limine` bootloader (no Secure Boot)
+- limine bootloader (no Secure Boot)
 
-- Hardened `/tmp` with `nodev,nosuid`
+- Hardened /tmp with nodev, nosuid
 
 - UTC time, proper locales, networking
 
 - MAC address randomization
 
-- Encrypted, Filtered DNS
+- Encrypted, filtered DNS
 
 - Minimal, maintainable base
