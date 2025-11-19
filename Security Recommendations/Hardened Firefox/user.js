@@ -21,15 +21,16 @@ user_pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
 user_pref("browser.startup.page", 0);
 // -------------------------------------
 // Set HOME+NEWWINDOW page
-user_pref("browser.startup.homepage", "about:blank");
+user_pref("browser.startup.homepage", "chrome://browser/content/blanktab.html");
 // -------------------------------------
 // Set NEWTAB page
 // true=Activity Stream (default), false=blank page
 user_pref("browser.newtabpage.enabled", false);
 // -------------------------------------
 // Disable sponsored content on Firefox Home (Activity Stream)
-user_pref("browser.newtabpage.activity-stream.showSponsored", false); // [FF58+]
-user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false); // [FF83+] Shortcuts>Sponsored shortcuts
+user_pref("browser.newtabpage.activity-stream.showSponsored", false); // [FF58+] Sponsored stories
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false); // [FF83+] Sponsored shortcuts
+user_pref("browser.newtabpage.activity-stream.showSponsoredCheckboxes", false); // [FF140+] Support Firefox
 // -------------------------------------
 // Clear default topsites
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
@@ -71,14 +72,8 @@ user_pref("extensions.htmlaboutaddons.recommendations.enabled", false);
 user_pref("browser.discovery.enabled", false);
 user_pref("browser.discovery.sites", "");
 user_pref("extensions.getAddons.discovery.api_url", "");
-// -------------------------------------
-// Disable shopping experience [FF116+]
-user_pref("browser.shopping.experience2023.enabled", false); // [DEFAULT: false]
-user_pref("browser.shopping.experience2023.opted", 2);
-user_pref("browser.shopping.experience2023.active", false);
-user_pref("browser.shopping.experience2023.ads.enabled", false);
 //
-// TELEMETRY
+// ACTIVITY STREAM
 //
 // Disable new data submission [FF41+]
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
@@ -320,10 +315,11 @@ user_pref("browser.urlbar.trending.featureGate", false);
 // -------------------------------------
 // Disable urlbar suggestions
 user_pref("browser.urlbar.addons.featureGate", false); // [FF115+]
+user_pref("browser.urlbar.amp.featureGate", false); // [FF141+] adMarketplace
 user_pref("browser.urlbar.fakespot.featureGate", false); // [FF130+] [DEFAULT: false]
-user_pref("browser.urlbar.mdn.featureGate", false); // [FF117+] [HIDDEN PREF]
-user_pref("browser.urlbar.pocket.featureGate", false); // [FF116+] [DEFAULT: false]
-user_pref("browser.urlbar.weather.featureGate", false); // [FF108+] [DEFAULT: false]
+user_pref("browser.urlbar.mdn.featureGate", false); // [FF117+]
+user_pref("browser.urlbar.weather.featureGate", false); // [FF108+]
+user_pref("browser.urlbar.wikipedia.featureGate", false); // [FF141+]
 user_pref("browser.urlbar.yelp.featureGate", false); // [FF124+]
 // -------------------------------------
 // Disable urlbar clipboard suggestions [FF118+]
@@ -574,6 +570,12 @@ user_pref("browser.tabs.searchclipboardfor.middleclick", false); // [DEFAULT: fa
 user_pref("browser.contentanalysis.enabled", false); // [FF121+] [DEFAULT: false]
 user_pref("browser.contentanalysis.default_result", 0); // [FF127+] [DEFAULT: 0]
 // -------------------------------------
+// Disable referrer and storage access for resources injected by content scripts [FF139+]
+// user_pref("privacy.antitracking.isolateContentScriptResources", true);
+// -------------------------------------
+// Disable CSP Level 2 Reporting [FF140+]
+user_pref("security.csp.reporting.enabled", false);
+// -------------------------------------
 // Disable the default checkedness for "Save card and address to Firefox" checkboxes
 user_pref("dom.payments.defaults.saveAddress", false);
 user_pref("dom.payments.defaults.saveCreditCard", false);
@@ -642,7 +644,7 @@ user_pref("privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true); // [D
 //
 // Set/enforce clearOnShutdown items [FF136+]
 user_pref("privacy.clearOnShutdown_v2.browsingHistoryAndDownloads", true); // [DEFAULT: true]
-user_pref("privacy.clearOnShutdown_v2.downloads", true);
+user_pref("privacy.clearOnShutdown_v2.downloads", true); // [HIDDEN]
 user_pref("privacy.clearOnShutdown_v2.formdata", true);
 //
 // Set Session Restore to clear on shutdown [FF34+]
@@ -724,6 +726,9 @@ user_pref("privacy.resistFingerprinting.block_mozAddonManager", true);
 // 0=prompt, 1=disabled, 2=enabled
 user_pref("privacy.spoof_english", 2);
 // -------------------------------------
+// Skip browser.startup.blankWindow if RFP is used [FF136+]
+// user_pref("privacy.resistFingerprinting.skipEarlyBlankFirstPaint", true); // [DEFAULT: true]
+// -------------------------------------
 // Disable using system colors
 user_pref("browser.display.use_system_colors", false); // [DEFAULT: false NON-WINDOWS]
 // -------------------------------------
@@ -739,6 +744,7 @@ user_pref("browser.link.open_newwindow.restriction", 0);
 // -------------------------------------
 // Disable WebGL (Web Graphics Library)
 user_pref("webgl.disabled", true);
+user_pref("dom.webgpu.enabled", false);
 //
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // OPTIONAL OPSEC
@@ -863,7 +869,7 @@ user_pref("gfx.font_rendering.opentype_svg.enabled", false);
 // Disable widevine CDM (Content Decryption Module)
 user_pref("media.gmp-widevinecdm.enabled", false);
 // -------------------------------------
-// Disable all DRM content (EME: Encryption Media Extension)
+// Disable all (DRM: Digital Rights Management) content (EME: Encryption Media Extension)
 user_pref("media.eme.enabled", false);
 user_pref("browser.eme.ui.enabled", false);
 // -------------------------------------
@@ -1073,7 +1079,6 @@ user_pref("privacy.globalprivacycontrol.pbmode.enabled", true); // [DEFAULT: tru
 // user_pref("general.oscpu.override", ""); // [HIDDEN PREF]
 // user_pref("general.platform.override", ""); // [HIDDEN PREF]
 // user_pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0"); // [HIDDEN PREF]
-// user_pref("media.ondevicechange.enabled", false);
 // user_pref("media.video_stats.enabled", false);
 // user_pref("webgl.enable-debug-renderer-info", false);
 user_pref("ui.use_standins_for_native_colors", true);
@@ -1189,4 +1194,12 @@ user_pref("webgl.enable-webgl2", false);
 //
 // Remove webchannel whitelist
 // user_pref("webchannel.allowObject.urlWhitelist", "");
+//
+// FF140
+//
+// Disable shopping experience [FF116+]
+user_pref("browser.shopping.experience2023.enabled", false); // [DEFAULT: false]
+// -------------------------------------
+// Disable urlbar suggestions
+user_pref("browser.urlbar.pocket.featureGate", false); // [FF116+] [DEFAULT: false]
 //
