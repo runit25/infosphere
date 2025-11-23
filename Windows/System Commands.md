@@ -19,9 +19,9 @@ During the "Let's add your Microsoft account" screen, press:
 
 **Repair corrupted system files using DISM and SFC.**
 
-DISM, short for Deployment Image Servicing and Management, is a command-line tool provided by Microsoft to service Windows images (WIM, VHD, and VHDX files) and prepare them for deployment, which is achieved by downloading the replacement files from Windows servers.
+DISM (Deployment Image Servicing and Management): Repairs the Windows component store`WinSxS`, which contains all the necessary restoration files; by default, it downloads files from Windows Update.
 
-SFC, short for System File Checker. Scans for important system files and restores them using the cached copy located within the compressed folder of Windows itself.
+SFC (System File Checker): Scans protected system files and replaces missing and/or corrupted files using the local cache in the component store.
 
 - Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
 - Accept the **(UAC)** prompt
