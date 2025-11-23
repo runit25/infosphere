@@ -124,6 +124,7 @@ Download here: <https://www.kaspersky.com/downloads/free-virus-removal-tool>
 - Select **Change parameters** and include any potentially missing external drives [C:, etc]
 - Click `OK`, **Start scan**
 - Once complete, post screenshots of the results here for further analysis
+
 ***
 
 ## MSERT
