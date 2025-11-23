@@ -25,13 +25,13 @@ SFC, short for System File Checker. Scans for important system files and restore
 
 ***
 
-## DISM, SFC Guide
+## DISM and SFC Guide
 
-**Repair important files with the DISM and SFC commands.**
+**Repair corrupted system files using DISM and SFC.**
 
 - Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
 - Accept the **(UAC)** prompt
-- Run these commands in order:
+- Run these commands **in order**:
   ```
   DISM.exe /Online /Cleanup-Image /RestoreHealth
   ```
@@ -42,9 +42,9 @@ SFC, short for System File Checker. Scans for important system files and restore
 
 ***
 
-## Disable/Enable Fast Startup
+## Disable Fast Startup
 
-**Disable/Enable Fast Startup.**
+**Disable Fast Startup.**
 
 - Press `Superkey` + `X` / `Windows Icon` + `X` followed by `A`
 - Accept the **(UAC)** prompt
@@ -52,7 +52,4 @@ SFC, short for System File Checker. Scans for important system files and restore
   ```
   powercfg /h off
   ```
-- Re-enable Fast Startup:
-  ```
-  powercfg /h on
-  ```
+  - __Note:__  Disabling hibernation removes "hiberfil.sys," freeing up several gigabytes of disk space in proportion to the users' RAM. and ensures a complete system shutdown on reboot, reducing malware persistence across restarts. and other system-related issues.
