@@ -7,6 +7,7 @@
 During the "Let's add your Microsoft account" screen, press:
 
 - `Shift` + `F10` / `Shift` + `Fn` + `F10` to prompt a black terminal screen.
+- **Tip**: Plug in an external keyboard if you're facing technical difficulties (laptop users).
 - In the empty terminal type:
   ```
   start ms-cxh:localonly
