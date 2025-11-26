@@ -216,9 +216,6 @@ user_pref("browser.safebrowsing.downloads.remote.url", "");
 user_pref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", false);
 user_pref("browser.safebrowsing.downloads.remote.block_uncommon", false);
 // -------------------------------------
-// Disable "ignore this warning" on SB warnings [FF45+]
-// user_pref("browser.safebrowsing.allowOverride", false);
-// -------------------------------------
 // Google connections
 user_pref("browser.safebrowsing.downloads.remote.block_dangerous", false);
 user_pref("browser.safebrowsing.downloads.remote.block_dangerous_host", false);
@@ -237,7 +234,6 @@ user_pref("browser.safebrowsing.provider.google4.dataSharing.enabled", false);
 user_pref("browser.safebrowsing.provider.google4.dataSharingURL", "");
 user_pref("browser.safebrowsing.provider.google.advisory", "");
 user_pref("browser.safebrowsing.provider.google.advisoryURL", "");
-user_pref("browser.safebrowsing.provider.google.gethashURL", "");
 user_pref("browser.safebrowsing.provider.google4.advisoryURL", "");
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "");
@@ -938,21 +934,6 @@ user_pref("extensions.webcompat-reporter.enabled", false); // [DEFAULT: false]
 // -------------------------------------
 // Disable Quarantined Domains [FF115+]
 user_pref("extensions.quarantinedDomains.enabled", false); // [DEFAULT: true]
-// -------------------------------------
-// prefsCleaner: reset previously active items removed from arkenfox FF128+
-// user_pref("privacy.clearOnShutdown.cache", "");
-// user_pref("privacy.clearOnShutdown.cookies", "");
-// user_pref("privacy.clearOnShutdown.downloads", "");
-// user_pref("privacy.clearOnShutdown.formdata", "");
-// user_pref("privacy.clearOnShutdown.history", "");
-// user_pref("privacy.clearOnShutdown.offlineApps", "");
-// user_pref("privacy.clearOnShutdown.sessions", "");
-// user_pref("privacy.cpd.cache", "");
-// user_pref("privacy.cpd.cookies", "");
-// user_pref("privacy.cpd.formdata", "");
-// user_pref("privacy.cpd.history", "");
-// user_pref("privacy.cpd.offlineApps", "");
-// user_pref("privacy.cpd.sessions", "");
 //
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // DON'T BOTHER
@@ -1187,8 +1168,6 @@ user_pref("webgl.enable-webgl2", false);
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // DEPRECATED / RENAMED
 // >>>>>>>>>>>>>>>>>>>>>
-//
-// ESR128.x still uses all the following prefs
 //
 // FF132
 //
