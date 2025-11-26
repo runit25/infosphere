@@ -85,14 +85,14 @@ Download here: <https://antivirus-removal-tool.com/download/click.php?id=Antivir
     
     - AVG: <https://www.avg.com/en-us/avg-remover#pc>
     
-    - Norton: <https://norton.com/nrnr>
-    
     - Avast: <https://www.avast.com/uninstall-utility#pc>
+
+    - Norton: <https://norton.com/nrnr>
     
     - Avira: <https://support.avira.com/hc/en-us/articles/360003162153-Uninstallation-of-Avira-for-Windows>
     
     - Malwarebytes: <https://downloads.malwarebytes.com/file/mbst>
-    
+
     - Kaspersky: <https://support.kaspersky.com/common/uninstall/1464>
     
     - Bitdefender: <https://www.bitdefender.com/links/uninstall_consumer_paid.html>

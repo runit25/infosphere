@@ -10,7 +10,7 @@ Download here: <https://www.bleepingcomputer.com/download/rkill/dl/10/>
 
 - Run `rkill`, accept the **(UAC)** prompt
 - Press **ok** if prompted
-- Upload `Rkill`, located within one of the following directories (Desktop/Documents/Download), for further analysis
+- Upload `Rkill`, located on your Desktop for further analysis
 
 ***
 
