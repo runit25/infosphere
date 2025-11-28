@@ -1,0 +1,52 @@
+title: "Infosphere"
+description: "Public archive of resources"
+theme: "just-the-docs"
+baseurl: ""
+url: "https://infosphere.gitlab.io"
+heading_anchors: true
+logo: "/assets/infosphere_logo.png"
+
+color_scheme: dark
+search_enabled: true
+heading_anchors: true
+nav_enabled: true
+
+callouts_level: loud # or quiet
+callouts:
+  warning:
+    title: warning
+    color: yellow
+  important:
+    title: important
+    color: red
+
+
+# Back to top link
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: '&copy; 2025 Infosphere. All rights reserved.'
+
+# default layouts
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: default
+  - scope:
+      path: "draft"
+      type: "drafts"
+    values:
+      layout: default
+  - scope:
+      path: "docs"
+      type: "pages"
+    values:
+      layout: default
+
+
+# Optional callouts/admonitions (via Markdown extensions)
+markdown: kramdown
+kramdown:
+  input: GFM

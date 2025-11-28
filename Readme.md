@@ -9,3 +9,11 @@ Public archive of resources.
 Credits
 -------
 - Noco Shoko: <https://gitlab.com/NocoShoko>
+
+
+
+If you have cloned this and want to run a local test, use:
+```
+bundle install
+bundle exec jekyll serve --livereload
+```
