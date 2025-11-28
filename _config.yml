@@ -1,7 +1,7 @@
 title: "Infosphere"
 description: "Public archive of resources"
 theme: "just-the-docs"
-baseurl: ""
+baseurl: "infosphere"
 url: "https://infosphere.gitlab.io"
 heading_anchors: true
 logo: "/assets/infosphere_logo.png"
