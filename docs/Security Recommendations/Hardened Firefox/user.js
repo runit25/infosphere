@@ -1069,7 +1069,7 @@ user_pref("dom.gamepad.enabled", false);
 user_pref("dom.netinfo.enabled", false);
 user_pref("dom.vibrator.enabled", false);
 user_pref("dom.w3c_touch_events.enabled", 0);
-user_pref("dom.webaudio.enabled", false);
+// user_pref("dom.webaudio.enabled", false);
 user_pref("media.navigator.enabled", false);
 user_pref("media.webspeech.synth.enabled", false);
 // -------------------------------------
