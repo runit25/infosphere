@@ -538,9 +538,6 @@ user_pref("browser.helperApps.deleteTempFileOnExit", true);
 user_pref("browser.uitour.enabled", false);
 user_pref("browser.uitour.url", ""); // Defense-in-depth
 // -------------------------------------
-// Reset remote debugging to disabled
-user_pref("devtools.debugger.remote-enabled", false); // [DEFAULT: false]
-// -------------------------------------
 // Disable websites overriding Firefox's keyboard shortcuts [FF58+]
 // 0 (default) or 1=allow, 2=block
 // user_pref("permissions.default.shortcuts", 2);
@@ -578,19 +575,11 @@ user_pref("dom.payments.defaults.saveCreditCard", false);
 // -------------------------------------
 // Disable Displaying Javascript in History URLs
 user_pref("browser.urlbar.filter.javascript", true);
-// -------------------------------------
-// Disable Firefox AI Chatbot
-user_pref("browser.ml.chat.enabled", false);
-user_pref("browser.ml.chat.shortcuts", false);
-user_pref("browser.ml.chat.sidebar", false);
 //
 // DOWNLOADS
 //
 // Enable user interaction for security by always asking where to download
 user_pref("browser.download.useDownloadDir", false);
-// -------------------------------------
-// Disable downloads panel opening on every download [FF96+]
-user_pref("browser.download.alwaysOpenPanel", false);
 // -------------------------------------
 // Disable adding downloads to the system's "recent documents" list
 user_pref("browser.download.manager.addToRecentDocs", false);
@@ -1091,36 +1080,13 @@ user_pref("startup.homepage_welcome_url.additional", "");
 user_pref("startup.homepage_override_url", ""); // What's New page after updates
 user_pref("browser.aboutwelcome.enabled", false);
 //
-// WARNINGS
-//
-user_pref("browser.tabs.warnOnClose", false); // [DEFAULT: false FF94+]
-user_pref("browser.tabs.warnOnCloseOtherTabs", false);
-user_pref("browser.tabs.warnOnOpen", false);
-user_pref("browser.warnOnQuitShortcut", false); // [FF94+]
-user_pref("full-screen-api.warning.delay", 0);
-user_pref("full-screen-api.warning.timeout", 0);
-user_pref("browser.warnOnQuit", false);
-//
 // UPDATES
 //
 // Disable auto-INSTALLING Firefox updates [NON-WINDOWS]
 user_pref("app.update.auto", false);
-// -------------------------------------
-// Disable auto-CHECKING for extension and theme updates
-user_pref("extensions.update.enabled", false);
-// -------------------------------------
-// Disable auto-INSTALLING extension and theme updates
-user_pref("extensions.update.autoUpdateDefault", false);
-// -------------------------------------
-// Disable extension metadata
-user_pref("extensions.getAddons.cache.enabled", false);
-// -------------------------------------
-// Disable search engine updates (e.g. OpenSearch)
-user_pref("browser.search.update", false);
 //
 // CONTENT BEHAVIOR
 //
-user_pref("accessibility.typeaheadfind", false); // enable "Find As You Type"
 user_pref("clipboard.autocopy", false); // disable autocopy default [LINUX]
 user_pref("layout.spellcheckDefault", 0); // 0=none, 1-multi-line, 2=multi-line & single-line
 //
@@ -1151,10 +1117,6 @@ user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", fa
 user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false); // disable CFR [FF67+]
 user_pref("browser.urlbar.showSearchTerms.enabled", false);
 user_pref("browser.sessionstore.interval", 30000); // minimum interval between session save operations
-user_pref("network.manage-offline-status", false);
-user_pref("browser.preferences.moreFromMozilla", false);
-user_pref("browser.disableResetPrompt", true); // [HIDDEN PREF]
-// user_pref("xpinstall.signatures.required", false); // enforced extension signing (Nightly/ESR)
 //
 // MORE
 //
@@ -1168,11 +1130,6 @@ user_pref("webgl.enable-webgl2", false);
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // DEPRECATED / RENAMED
 // >>>>>>>>>>>>>>>>>>>>>
-//
-// FF132
-//
-// Remove webchannel whitelist
-// user_pref("webchannel.allowObject.urlWhitelist", "");
 //
 // FF140
 //
