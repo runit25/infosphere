@@ -356,7 +356,7 @@ nano /boot/limine.conf
 ```
 
 ```conf
-timeout: 5
+timeout: 10
 
 /Arch Linux (linux)
     protocol: linux
