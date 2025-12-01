@@ -267,6 +267,7 @@ cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 
 ### 14.0 Create `/boot/limine.conf`
 ```shell
+/Void
 PROTOCOL: linux
 KERNEL_PATH: boot():/vmlinuz-*
 CMDLINE: root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
