@@ -1,6 +1,6 @@
 ---
 title: "Void Linux Install Guide (LVM)"
-description: "Installation guide for Arch Linux with LVM, limine bootloader, and ext4."
+description: "Installation guide for Void Linux with LVM, Limine bootloader, and ext4."
 date: 2025-11-26
 tags: []
 parent: Void Linux
@@ -134,7 +134,7 @@ mount /dev/vg/root /mnt
 # Create the directory structure:
 mkdir -p /mnt/{boot,home,var,tmp}
 
-# Mount EFI parition:
+# Mount EFI partition:
 mount /dev/nvme0n1p1 /mnt/boot
 
 # Mount the remaining directories:
@@ -189,6 +189,7 @@ echo myhostname > /etc/hostname
 ::1         localhost
 127.0.1.1   myhostname.localdomain   myhostname
 ```
+vim and/or nano works
 
 ### 6.0 Enable Networking Services
 #### Wired
@@ -254,7 +255,7 @@ chmod 600 /etc/doas.conf
 
 ### 13.0 Install limine
 ```shell
-pacman -S limine
+xbps-install -S limine
 ```
 
 ### 14.0 Install limine Bootloader
@@ -270,14 +271,19 @@ TIMEOUT=10
 :Void Linux
 PROTOCOL=linux
 KERNEL_PATH=boot:///vmlinuz-*
-CMDLINE=root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
-MODULE_PATH=
+CMDLINE=root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+MODULE_PATH=boot:///initramfs-*.img
 
 :Void Linux (Fallback)
 PROTOCOL=linux
 KERNEL_PATH=boot:///vmlinuz-*
-CMDLINE=root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none earlyprintk=efi
-MODULE_PATH=
+CMDLINE=root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap earlyprintk=efi
+MODULE_PATH=boot:///initrd-*.img
+```
+
+#### Regenerate initramfs
+```shell
+xbps-reconfigure -fa
 ```
 
 ### 16.0 Fix /boot Permissions
