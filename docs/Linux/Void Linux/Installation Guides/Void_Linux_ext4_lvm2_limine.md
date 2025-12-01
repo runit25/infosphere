@@ -150,7 +150,7 @@ swapon /dev/vg/swap
 ## Void Base Installation
 #### Install Essential Packages:
 ```shell
-xbps-install -Sy -R https://repo-de.voidlinux.org/ -r /mnt linux linux-firmware dracut e2fsprogs lvm2 dhcpcd iwd openssh nano bash
+xbps-install -Sy -R https://repo-de.voidlinux.org/ -r /mnt linux linux-firmware dracut e2fsprogs lvm2 dhcpcd openssh nano bash
 ```
 openssh (optional) remove unless you use ssh
 
@@ -224,8 +224,11 @@ xbps-install -S mesa-dri xf86-video-intel vulkan-intel intel-media-driver
 ```
 
 ### 9.0 Enable multilib
+```shell
 echo 'multilib=yes' >> /etc/xbps.d/00-multilib.conf
 xbps-install -S void-repo-multilib
+xbps-install -Su
+```
 
 ### 10.0 Set Root Password
 ```shell
@@ -261,7 +264,7 @@ cp /usr/local/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
 ### 15.0 Create `/boot/limine.conf`
-``` shell
+```shell
 TIMEOUT=10
 
 :Void Linux
