@@ -191,9 +191,14 @@ echo myhostname > /etc/hostname
 ```
 
 ### 6.0 Enable Networking Services
+#### Wired
 ```shell
-ln -s /etc/sv/dhcpcd /var/service/        # for wired
-xbps-install -S iwd                       # if using Wi-Fi
+ln -s /etc/sv/dhcpcd /var/service/
+```
+
+#### WI-FI (iwd)
+```shell
+xbps-install -S iwd
 ln -s /etc/sv/iwd /var/service/
 ```
 
