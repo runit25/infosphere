@@ -39,7 +39,7 @@ Adjust keymap as needed (e.g., us, de).
 dhcpcd
 ```
 
-#### Wi-Fi (using `wpa_supplicant`)
+#### Wi-Fi (using wpa_supplicant)
 ```shell
 wpa_supplicant -B -i wlan0 -c <(wpa_passphrase "SSID" "password")
 
@@ -157,7 +157,7 @@ openssh (optional) remove unless you use ssh
 ## Configure the System
 ### 1.0 Generate fstab
 ```shell
-
+xgenfstab /mnt > /mnt/etc/fstab
 ```
 
 ### 2.0 Chroot into the new system
