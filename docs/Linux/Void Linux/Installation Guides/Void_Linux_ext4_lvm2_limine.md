@@ -150,7 +150,7 @@ swapon /dev/vg/swap
 ## Void Base Installation
 #### Install Essential Packages:
 ```shell
-xbps-install -Sy -R https://repo-de.voidlinux.org/ -r /mnt linux linux-firmware dracut e2fsprogs lvm2 dhcpcd openssh nano bash
+xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 xtools-minimal dhcpcd openssh nano bash
 ```
 openssh (optional) remove unless you use ssh
 
@@ -165,12 +165,7 @@ xgenfstab /mnt > /mnt/etc/fstab
 chroot /mnt /bin/bash
 ```
 
-### 3.0 Enable the LVM service
-```shell
-ln -s /etc/sv/lvm /var/service/
-```
-
-### 4.0 Set Time and Locale
+### 3.0 Set Time and Locale
 ```shell
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime # Avoids DST issues
 echo "en_GB.UTF-8 UTF-8" >> /etc/default/libc-locales
@@ -178,20 +173,22 @@ xbps-reconfigure -f glibc-locales
 echo "LANG=en_GB.UTF-8" > /etc/locale.conf
 ```
 
-### 5.0 Network Configuration
+### 4.0 Network Configuration
 #### Set hostname:
 ```shell
 echo myhostname > /etc/hostname
 ```
 #### Edit /etc/hosts:
 ```shell
+cat > /etc/hosts <<EOF
 127.0.0.1   localhost
 ::1         localhost
-127.0.1.1   myhostname.localdomain   myhostname
+127.0.1.1   myhostname.localdomain myhostname
+EOF
 ```
-vim and/or nano works
+Alternatively use nano/vim
 
-### 6.0 Enable Networking Services
+### 5.0 Enable Networking Services
 #### Wired
 ```shell
 ln -s /etc/sv/dhcpcd /var/service/
@@ -203,7 +200,12 @@ xbps-install -S iwd
 ln -s /etc/sv/iwd /var/service/
 ```
 
-### 7.0 Install Microcode
+#### Fix transient resolver faulure
+```shell
+echo "nameserver 1.1.1.1" > /etc/resolv.conf
+```
+
+### 6.0 Install Microcode
 #### AMD
 ```shell
 xbps-install -S linux-firmware-amd
@@ -214,79 +216,70 @@ xbps-install -S linux-firmware-amd
 xbps-install -S intel-ucode
 ```
 
-### 8.0 Install graphics Drivers
+### 7.0 Install graphics Drivers
 #### AMD
 ```shell
-xbps-install -S mesa-dri vulkan-radeon
+xbps-install -S mesa-dri mesa-vulkan-radeon
 ```
 ### Intel
 ```shell
-xbps-install -S mesa-dri xf86-video-intel vulkan-intel intel-media-driver
+xbps-install -S mesa-dri xf86-video-intel mesa-vulkan-intel intel-media-driver
 ```
 
-### 9.0 Enable multilib
+### 8.0 Enable multilib
 ```shell
-echo 'multilib=yes' >> /etc/xbps.d/00-multilib.conf
 xbps-install -S void-repo-multilib
 xbps-install -Su
 ```
 
-### 10.0 Set Root Password
+### 9.0 Set Root Password
 ```shell
 passwd
 ```
 
-### 11.0 Add User
+### 10.0 Add User
 ```shell
 useradd -m -G wheel,users,audio,video,storage -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### 12.0 Install opendoas
+### 11.0 Install opendoas
 ```shell
 xbps-install -S opendoas
 ```
 
 #### Allow yourusername to run commands as root:
 ```shell
-echo 'permit persist :wheel' > /etc/doas.conf
+echo 'permit persist yourusername' > /etc/doas.conf
 chmod 600 /etc/doas.conf
 ```
 
-### 13.0 Install limine
+### 12.0 Install limine
 ```shell
 xbps-install -S limine
 ```
 
-### 14.0 Install limine Bootloader
+### 13.0 Install limine Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
-cp /usr/local/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
+cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 15.0 Create `/boot/limine.conf`
+### 14.0 Create `/boot/limine.conf`
 ```shell
-TIMEOUT=10
-
-:Void Linux
-PROTOCOL=linux
-KERNEL_PATH=boot:///vmlinuz-*
-CMDLINE=root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
-MODULE_PATH=boot:///initramfs-*.img
-
-:Void Linux (Fallback)
-PROTOCOL=linux
-KERNEL_PATH=boot:///vmlinuz-*
-CMDLINE=root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap earlyprintk=efi
-MODULE_PATH=boot:///initrd-*.img
+PROTOCOL: linux
+KERNEL_PATH: boot():/vmlinuz-*
+CMDLINE: root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+MODULE_PATH: boot():/initramfs-*.img
 ```
+replace `*` with the package version located in `ls /boot` (e.g., vmlinuz-6.12.59_1). 
 
 #### Regenerate initramfs
 ```shell
 xbps-reconfigure -fa
 ```
 
-### 16.0 Fix /boot Permissions
+### 15.0 Fix /boot Permissions
 ```shell
 chmod 755 /boot
 chmod 600 /boot/limine.conf
