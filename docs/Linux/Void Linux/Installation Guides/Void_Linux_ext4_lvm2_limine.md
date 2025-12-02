@@ -31,7 +31,7 @@ If the directory exists you're free to continue.
 ```shell
 loadkeys uk
 ```
-Adjust keymap as needed (e.g., us, de). 
+Adjust accordingly (e.g., us, de).
 
 ### 4.0 Connect to the Internet
 #### Wired (DHCP):
@@ -41,8 +41,8 @@ dhcpcd
 
 #### Wi-Fi (using wpa_supplicant)
 ```shell
-wpa_supplicant -B -i wlan0 -c <(wpa_passphrase "SSID" "password")
-
+wpa_passphrase "SSID" "password" > /tmp/wpa.conf
+wpa_supplicant -B -i wlan0 -c /tmp/wpa.conf
 dhcpcd wlan0
 ```
 
@@ -82,34 +82,34 @@ select [ Write ]
 |Number | Start (sector) | End (sector) | Size   | Code | Name             |
 |------ | -------------- | ------------ | ------ | ---- | ---------------- |
 |1      | 2048           | 1130495      | 1G     | EF00 | EFI System       |
-|2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
+|2      | 1130496        | 976773134    | 475.9G | 8300 | Linux Filesystem |
 ```
 
 ### 7.0 Create LVM Physical Volume & Volume Group
 ```shell
 pvcreate /dev/nvme0n1p2
-vgcreate vg /dev/nvme0n1p2
+vgcreate vg0 /dev/nvme0n1p2
 ```
 
 ### 8.0 Create Logical Volumes
 #### Create dedicated logical volumes for better isolation and security:
 ```shell
 # Root: OS and packages (20G)
-lvcreate -L 20G vg -n root
+lvcreate -L 20G vg0 -n root
 
 # /var: logs, caches, databases (20G)
-lvcreate -L 20G vg -n var
+lvcreate -L 20G vg0 -n var
 
 # /tmp: temporary files (8G)
-lvcreate -L 8G vg -n tmp
+lvcreate -L 8G vg0 -n tmp
 
 # Swap: 4G (adjust to match RAM if hibernating)
-lvcreate -L 4G vg -n swap
+lvcreate -L 4G vg0 -n swap
 
 # /home: remaining space
-lvcreate -l 100%FREE vg -n home
+lvcreate -l 100%FREE vg0 -n home
 ```
-Adjust lvm volumes accordingly. (**Example:** "256G drive Reduce /var to 10G, /tmp to 4G")
+Drives (<128G), reduce /var to 10G, /tmp to 4G.
 
 ### 9.0 Format Filesystems
 ```shell
@@ -117,19 +117,19 @@ Adjust lvm volumes accordingly. (**Example:** "256G drive Reduce /var to 10G, /t
 mkfs.vfat -F32 /dev/nvme0n1p1
 
 # Format the remaining directories:
-mkfs.ext4 -L "Void Root" /dev/vg/root
-mkfs.ext4 -L "Void Var"  /dev/vg/var
-mkfs.ext4 -L "Void Tmp"  /dev/vg/tmp
-mkfs.ext4 -L "Void Home" /dev/vg/home
+mkfs.ext4 -L "Void_Root" /dev/vg0/root
+mkfs.ext4 -L "Void_Var"  /dev/vg0/var
+mkfs.ext4 -L "Void_Tmp"  /dev/vg0/tmp
+mkfs.ext4 -L "Void_Home" /dev/vg0/home
 
 # Format swap
-mkswap /dev/vg/swap      # Format swap LV
+mkswap /dev/vg0/swap    # Format swap LV
 ```
 
 ### 10.0 Mount Filesystems
 ```shell
 # Mount root first
-mount /dev/vg/root /mnt
+mount /dev/vg0/root /mnt
 
 # Create the directory structure:
 mkdir -p /mnt/{boot,home,var,tmp}
@@ -138,12 +138,12 @@ mkdir -p /mnt/{boot,home,var,tmp}
 mount /dev/nvme0n1p1 /mnt/boot
 
 # Mount the remaining directories:
-mount /dev/vg/home /mnt/home
-mount /dev/vg/var  /mnt/var
-mount /dev/vg/tmp  /mnt/tmp
+mount /dev/vg0/home /mnt/home
+mount /dev/vg0/var  /mnt/var
+mount /dev/vg0/tmp  /mnt/tmp
 
 # Enable Swap
-swapon /dev/vg/swap
+swapon /dev/vg0/swap
 ```
 /boot must remain unencrypted for UEFI boot. 
 
@@ -152,7 +152,7 @@ swapon /dev/vg/swap
 ```shell
 xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 xtools-minimal dhcpcd openssh nano bash
 ```
-openssh (optional) remove unless you use ssh
+Remove openssh if you don't intend to use it.
 
 ## Configure the System
 ### 1.0 Generate fstab
@@ -167,7 +167,7 @@ chroot /mnt /bin/bash
 
 ### 3.0 Set Time and Locale
 ```shell
-ln -sf /usr/share/zoneinfo/UTC /etc/localtime # Avoids DST issues
+ln -sf /usr/share/zoneinfo/Region/City /etc/localtime  # e.g., Europe/London
 echo "en_GB.UTF-8 UTF-8" >> /etc/default/libc-locales
 xbps-reconfigure -f glibc-locales
 echo "LANG=en_GB.UTF-8" > /etc/locale.conf
@@ -200,12 +200,13 @@ xbps-install -S iwd
 ln -s /etc/sv/iwd /var/service/
 ```
 
-#### Fix transient resolver faulure
+#### Fallback DNS (optional but helpful)
 ```shell
 echo "nameserver 1.1.1.1" > /etc/resolv.conf
 ```
+dhcpcd will overwrite this on reboot unless made immutable (chattr +i), so only use temporarily.
 
-### 6.0 Install Microcode
+### 6.0 Microcode (CPU-specific)
 #### AMD
 ```shell
 xbps-install -S linux-firmware-amd
@@ -216,7 +217,7 @@ xbps-install -S linux-firmware-amd
 xbps-install -S intel-ucode
 ```
 
-### 7.0 Install graphics Drivers
+### 7.0 graphics Drivers
 #### AMD
 ```shell
 xbps-install -S mesa-dri mesa-vulkan-radeon
@@ -226,11 +227,12 @@ xbps-install -S mesa-dri mesa-vulkan-radeon
 xbps-install -S mesa-dri xf86-video-intel mesa-vulkan-intel intel-media-driver
 ```
 
-### 8.0 Enable multilib
+### 8.0 Enable multilib and nonfree
 ```shell
-xbps-install -S void-repo-multilib
+xbps-install -S void-repo-multilib void-repo-nonfree
 xbps-install -Su
 ```
+Allows you to install Steam, etc.
 
 ### 9.0 Set Root Password
 ```shell
@@ -259,7 +261,7 @@ chmod 600 /etc/doas.conf
 xbps-install -S limine
 ```
 
-### 13.0 Install limine Bootloader
+### 13.0 limine Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
@@ -270,10 +272,12 @@ cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 /Void
 PROTOCOL: linux
 KERNEL_PATH: boot():/vmlinuz-*
-CMDLINE: root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+CMDLINE: root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none quiet loglevel=3
 MODULE_PATH: boot():/initramfs-*.img
 ```
 replace `*` with the package version located in `ls /boot` (e.g., vmlinuz-6.12.59_1). 
+
+`quiet loglevel=3` flag reduces boot noise (remove if debugging)
 
 #### Regenerate initramfs
 ```shell
@@ -283,7 +287,7 @@ xbps-reconfigure -fa
 ### 15.0 Fix /boot Permissions
 ```shell
 chmod 755 /boot
-chmod 600 /boot/limine.conf
+chmod 644 /boot/limine.conf
 ```
 
 ## Security Hardening
