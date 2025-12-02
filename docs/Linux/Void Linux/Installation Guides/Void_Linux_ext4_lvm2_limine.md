@@ -303,7 +303,7 @@ chmod 644 /boot/limine.conf
 ### 1.0 Harden /tmp
 Edit `/etc/fstab` to include:
 ```shell
-UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
+tmpfs    /tmp    tmpfs    rw,relatime,noatime,nosuid,nodev    0 2
 ```
 nano/vim works
 
