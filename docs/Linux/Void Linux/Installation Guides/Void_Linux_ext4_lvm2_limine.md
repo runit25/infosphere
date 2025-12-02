@@ -159,6 +159,7 @@ Remove openssh if you don't intend to use it.
 ```shell
 xgenfstab /mnt > /mnt/etc/fstab
 ```
+xgenfstab generates a functional fstab.
 
 ### 2.0 Chroot into the new system
 ```shell
@@ -206,7 +207,13 @@ echo "nameserver 1.1.1.1" > /etc/resolv.conf
 ```
 dhcpcd will overwrite this on reboot unless made immutable (chattr +i), so only use temporarily.
 
-### 6.0 Microcode (CPU-specific)
+### 6.0 Enable LVM in the Initramfs
+```shell
+mkdir -p /etc/dracut.conf.d
+echo 'add_dracutmodules+=" lvm "' > /etc/dracut.conf.d/99-lvm.conf
+```
+
+### 7.0 Microcode (CPU-specific)
 #### AMD
 ```shell
 xbps-install -S linux-firmware-amd
@@ -217,7 +224,7 @@ xbps-install -S linux-firmware-amd
 xbps-install -S intel-ucode
 ```
 
-### 7.0 graphics Drivers
+### 8.0 graphics Drivers
 #### AMD
 ```shell
 xbps-install -S mesa-dri mesa-vulkan-radeon
@@ -227,25 +234,25 @@ xbps-install -S mesa-dri mesa-vulkan-radeon
 xbps-install -S mesa-dri xf86-video-intel mesa-vulkan-intel intel-media-driver
 ```
 
-### 8.0 Enable multilib and nonfree
+### 9.0 Enable multilib and nonfree
 ```shell
 xbps-install -S void-repo-multilib void-repo-nonfree
 xbps-install -Su
 ```
 Allows you to install Steam, etc.
 
-### 9.0 Set Root Password
+### 10.0 Set Root Password
 ```shell
 passwd
 ```
 
-### 10.0 Add User
+### 11.0 Add User
 ```shell
 useradd -m -G wheel,users,audio,video,storage -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### 11.0 Install opendoas
+### 12.0 Install opendoas
 ```shell
 xbps-install -S opendoas
 ```
@@ -256,18 +263,18 @@ echo 'permit persist yourusername' > /etc/doas.conf
 chmod 600 /etc/doas.conf
 ```
 
-### 12.0 Install limine
+### 13.0 Install limine
 ```shell
 xbps-install -S limine
 ```
 
-### 13.0 limine Bootloader
+### 14.0 limine Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 14.0 Create `/boot/limine.conf`
+### 15.0 Create `/boot/limine.conf`
 ```shell
 /Void
 PROTOCOL: linux
@@ -275,26 +282,30 @@ KERNEL_PATH: boot():/vmlinuz-*
 CMDLINE: root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none quiet loglevel=3
 MODULE_PATH: boot():/initramfs-*.img
 ```
-replace `*` with the package version located in `ls /boot` (e.g., vmlinuz-6.12.59_1). 
+replace `*` with the appropriate package versions located here `ls /boot` (e,g.,initramfs-6.12.59_1.img, vmlinuz-6.12.59_1).
 
 `quiet loglevel=3` flag reduces boot noise (remove if debugging)
+
+Note: Package versions are expected to be maintained in /boot/limine.conf
 
 #### Regenerate initramfs
 ```shell
 xbps-reconfigure -fa
 ```
 
-### 15.0 Fix /boot Permissions
+### 16.0 Fix /boot Permissions
 ```shell
 chmod 755 /boot
 chmod 644 /boot/limine.conf
 ```
 
 ## Security Hardening
-### Find /tmp and include noatime, nosuid, nodev:
+### 1.0 Harden /tmp
+Edit `/etc/fstab` to include:
 ```shell
 UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
 ```
+nano/vim works
 
 ### Auto-Clean /tmp on Boot
 ```shell
