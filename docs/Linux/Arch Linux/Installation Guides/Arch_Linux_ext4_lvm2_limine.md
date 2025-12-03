@@ -3,7 +3,7 @@ title: "Arch Linux Install Guide (LVM)"
 description: "Installation guide for Arch Linux with LVM, limine bootloader, and ext4."
 date: 2025-11-26
 tags: []
-parent: Arch Linux
+parent: Arch Linux Guides
 ---
 
 # Arch Linux Install Guide

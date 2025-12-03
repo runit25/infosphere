@@ -4,6 +4,7 @@ description: "Useful batch scripts for Windows customization."
 date: 2025-11-27
 tags: []
 parent: Windows
+has_children: true
 ---
 
 # Windows Scripts

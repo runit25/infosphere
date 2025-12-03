@@ -1,9 +1,9 @@
 ---
 title: "Void Linux Install Guide (LVM)"
 description: "Installation guide for Void Linux with LVM, Limine bootloader, and ext4."
-date: 2025-11-26
+date: 2025-12-02
 tags: []
-parent: Void Linux
+parent: Void Linux Guides
 ---
 
 # Void Linux Install Guide

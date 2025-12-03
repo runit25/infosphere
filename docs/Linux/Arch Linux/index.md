@@ -1,5 +1,5 @@
 ---
-title: Installation Guides
+title: Arch Linux
 description: 
 parent: Linux
 ---
