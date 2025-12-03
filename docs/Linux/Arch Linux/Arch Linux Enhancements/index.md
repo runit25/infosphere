@@ -1,5 +1,6 @@
 ---
 title: Arch Linux Enhancements
 description: 
-parent: Linux
+parent: Arch Linux
+has_children: true
 ---
