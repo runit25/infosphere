@@ -309,6 +309,7 @@ nano/vim works
 
 ### Auto-Clean /tmp on Boot
 ```shell
+mkdir -p /etc/tmpfiles.d
 echo 'D /tmp 1777 root root 1d' > /etc/tmpfiles.d/clean-tmp.conf
 ```
 
