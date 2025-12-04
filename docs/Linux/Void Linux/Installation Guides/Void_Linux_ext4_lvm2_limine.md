@@ -150,7 +150,7 @@ swapon /dev/vg0/swap
 ## Void Base Installation
 #### Install Essential Packages:
 ```shell
-xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 xtools-minimal dhcpcd openssh nano bash
+xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 xtools-minimal dhcpcd iwd openssh nano bash
 ```
 Remove openssh if you don't intend to use it.
 
@@ -188,18 +188,6 @@ cat > /etc/hosts <<EOF
 EOF
 ```
 Alternatively use nano/vim
-
-### 5.0 Enable Networking Services
-#### Wired
-```shell
-ln -s /etc/sv/dhcpcd /var/service/
-```
-
-#### WI-FI (iwd)
-```shell
-xbps-install -S iwd
-ln -s /etc/sv/iwd /var/service/
-```
 
 #### Fallback DNS (optional but helpful)
 ```shell
@@ -335,11 +323,23 @@ umount -R /mnt
 reboot
 ```
 
-### Post-Install Verification
-#### Login
+### Post-Install
+#### 1.0 Installation Checks
 ```shell
 lsblk
 swapon --show
 cat /proc/cmdline
 cat /boot/limine.cfg
+```
+
+### 2.0 Enable Networking Services
+#### Wired
+```shell
+ln -s /etc/sv/dhcpcd /var/service/
+```
+
+#### WI-FI (iwd)
+```shell
+ln -s /etc/sv/dhcpcd /var/service/
+ln -s /etc/sv/iwd /var/service/
 ```
