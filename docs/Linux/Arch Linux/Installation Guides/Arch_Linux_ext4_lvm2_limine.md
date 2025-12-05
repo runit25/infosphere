@@ -380,10 +380,10 @@ echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
 This uses systemd-tmpfiles to clean /tmp on boot. The 1d means files older than 1 day are deleted. Change to 0 to clear all contents on every boot.
 
 ## Privacy: Randomize MAC Address
-Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
+Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/docs/Linux/Arch%20Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
 
 ##  DNS + Filtering (Recommended)
-Consult: [Arch_Linux_DNS+Filtering](<https://gitlab.com/runit25/infosphere/-/blob/main/Linux/Arch%20Linux%20Enhancements/Arch_Linux_DNS+Filtering.md>)
+incomplete
 
 ## Finalize and Reboot
 #### Exit chroot:
