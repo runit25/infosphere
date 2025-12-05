@@ -100,16 +100,15 @@ lvcreate -L 20G vg0 -n root
 # /var: logs, caches, databases (20G)
 lvcreate -L 20G vg0 -n var
 
-# /tmp: temporary files (8G)
-lvcreate -L 8G vg0 -n tmp
-
 # Swap: 4G (adjust to match RAM if hibernating)
 lvcreate -L 4G vg0 -n swap
 
 # /home: remaining space
 lvcreate -l 100%FREE vg0 -n home
 ```
-Drives (<128G), reduce /var to 10G, /tmp to 4G.
+Drives (<128G), reduce /var to 10G.
+
+Note: /tmp is handled securely via tmpfs in RAM (see hardening section).
 
 ### 9.0 Format Filesystems
 ```shell
@@ -119,7 +118,6 @@ mkfs.vfat -F32 /dev/nvme0n1p1
 # Format the remaining directories:
 mkfs.ext4 -L "Void_Root" /dev/vg0/root
 mkfs.ext4 -L "Void_Var"  /dev/vg0/var
-mkfs.ext4 -L "Void_Tmp"  /dev/vg0/tmp
 mkfs.ext4 -L "Void_Home" /dev/vg0/home
 
 # Format swap
@@ -132,7 +130,7 @@ mkswap /dev/vg0/swap    # Format swap LV
 mount /dev/vg0/root /mnt
 
 # Create the directory structure:
-mkdir -p /mnt/{boot,home,var,tmp}
+mkdir -p /mnt/{boot,home,var}
 
 # Mount EFI partition:
 mount /dev/nvme0n1p1 /mnt/boot
@@ -140,7 +138,6 @@ mount /dev/nvme0n1p1 /mnt/boot
 # Mount the remaining directories:
 mount /dev/vg0/home /mnt/home
 mount /dev/vg0/var  /mnt/var
-mount /dev/vg0/tmp  /mnt/tmp
 
 # Enable Swap
 swapon /dev/vg0/swap
@@ -294,7 +291,7 @@ Edit `/etc/fstab` to include:
 
 /dev/vg0/var    /var  ext4    rw,relatime,nodev,noexec,nosuid    0 2
 
-tmpfs    /tmp    tmpfs    rw,relatime,noatime,nosuid,nodev    0 2
+tmpfs    /tmp    tmpfs    rw,relatime,noatime,nosuid,nodev,mode=1777    0 0
 ```
 nano/vim works
 
