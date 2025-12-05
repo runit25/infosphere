@@ -1,6 +1,6 @@
 ---
 title: "Void Linux Install Guide (LUKS2 + LVM)"
-description: "Installation guide for Arch Linux with full disk encryption (LUKS2 + LVM), limine bootloader, and ext4."
+description: "Installation guide for Void Linux with full disk encryption (LUKS2 + LVM), limine bootloader, and ext4."
 date: 2025-12-02
 tags: []
 parent: Void Linux Guides
