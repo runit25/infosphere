@@ -287,9 +287,13 @@ chmod 755 /boot
 chmod 644 /boot/limine.conf
 ```
 
-### 17.0 Harden /tmp
+### 17.0 Harden /tmp, /var and /home mount options
 Edit `/etc/fstab` to include:
 ```shell
+/dev/vg0/home    /home ext4    rw,relatime,nodev    0 2
+
+/dev/vg0/var    /var  ext4    rw,relatime,nodev,noexec,nosuid    0 2
+
 tmpfs    /tmp    tmpfs    rw,relatime,noatime,nosuid,nodev    0 2
 ```
 nano/vim works
