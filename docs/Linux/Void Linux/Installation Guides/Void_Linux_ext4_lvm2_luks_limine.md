@@ -1,6 +1,6 @@
 ---
-title: "Void Linux Install Guide (LVM)"
-description: "Installation guide for Void Linux with LVM, Limine bootloader, and ext4."
+title: "Void Linux Install Guide (LUKS2 + LVM)"
+description: "Installation guide for Arch Linux with full disk encryption (LUKS2 + LVM), limine bootloader, and ext4."
 date: 2025-12-02
 tags: []
 parent: Void Linux Guides
@@ -10,7 +10,7 @@ parent: Void Linux Guides
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes LVM, limine bootloader, ext4, and base system.
+Installation includes full disk encryption (LUKS2 + LVM), limine bootloader, ext4, and base system.
 
 **Note:** Substitute /dev/nvme0nX with your corresponding drive (**Example:** "/dev/sda")
 
@@ -82,16 +82,28 @@ select [ Write ]
 |Number | Start (sector) | End (sector) | Size   | Code | Name             |
 |------ | -------------- | ------------ | ------ | ---- | ---------------- |
 |1      | 2048           | 1130495      | 1G     | EF00 | EFI System       |
-|2      | 1130496        | 976773134    | 475.9G | 8300 | Linux Filesystem |
+|2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
 ```
 
-### 7.0 Create LVM Physical Volume & Volume Group
+### 7.0 Encrypt Root Partition (LUKS2): 
 ```shell
-pvcreate /dev/nvme0n1p2
-vgcreate vg0 /dev/nvme0n1p2
+cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --iter-time 5000 --key-size 256 --pbkdf argon2id /dev/nvme0n1p2
+```
+You’ll be prompted to enter a passphrase.
+
+### 8.0 Open Encrypted Volume 
+```shell
+cryptsetup luksOpen /dev/nvme0n1p2 lukspart
+```
+This exposes the decrypted volume at /dev/mapper/lukspart.
+
+### 9.0 Create LVM Physical Volume & Volume Group
+```shell
+pvcreate /dev/mapper/lukspart
+vgcreate vg0 /dev/mapper/lukspart
 ```
 
-### 8.0 Create Logical Volumes
+### 10.0 Create Logical Volumes
 #### Create dedicated logical volumes for better isolation and security:
 ```shell
 # Root: OS and packages (20G)
@@ -111,7 +123,7 @@ lvcreate -l 100%FREE vg0 -n home
 ```
 Drives (<128G), reduce /var to 10G, /tmp to 4G.
 
-### 9.0 Format Filesystems
+### 11.0 Format Filesystems
 ```shell
 # Format EFI partition
 mkfs.vfat -F32 /dev/nvme0n1p1
@@ -126,7 +138,7 @@ mkfs.ext4 -L "Void_Home" /dev/vg0/home
 mkswap /dev/vg0/swap    # Format swap LV
 ```
 
-### 10.0 Mount Filesystems
+### 12.0 Mount Filesystems
 ```shell
 # Mount root first
 mount /dev/vg0/root /mnt
@@ -150,7 +162,7 @@ swapon /dev/vg0/swap
 ## Void Base Installation
 #### Install Essential Packages:
 ```shell
-xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 xtools-minimal dhcpcd iwd openssh nano bash
+xbps-install -Sy -R https://repo-de.voidlinux.org/current/ -r /mnt base-system linux linux-firmware dracut e2fsprogs lvm2 cryptsetup xtools-minimal dhcpcd iwd openssh nano bash
 ```
 Remove openssh if you don't intend to use it.
 
@@ -195,10 +207,10 @@ echo "nameserver 1.1.1.1" > /etc/resolv.conf
 ```
 dhcpcd will overwrite this on reboot unless made immutable (chattr +i), so only use temporarily.
 
-### 6.0 Enable LVM in the Initramfs
+### 6.0 Enable Crypt, LVM in the Initramfs
 ```shell
 mkdir -p /etc/dracut.conf.d
-echo 'add_dracutmodules+=" lvm "' > /etc/dracut.conf.d/99-lvm.conf
+echo 'add_dracutmodules+=" crypt lvm "' > /etc/dracut.conf.d/90-crypt-lvm.conf
 ```
 
 ### 7.0 Microcode (CPU-specific)
@@ -262,14 +274,23 @@ mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 15.0 Create `/boot/limine.conf`
+### 15.0 Get LUKS Partition UUID 
+```shell
+blkid -s UUID -o value /dev/nvme0n1p2
+```
+Remember the output (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+
+### 16.0 Create `/boot/limine.conf`
 ```shell
 /Void
 PROTOCOL: linux
 KERNEL_PATH: boot():/vmlinuz-*
-CMDLINE: root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none quiet loglevel=3
+CMDLINE: rd.luks.uuid=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none quiet loglevel=3
 MODULE_PATH: boot():/initramfs-*.img
 ```
+
+Replace xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx with the actual UUID obtained from Step 15.0
+
 replace `*` with the appropriate package versions located here `ls /boot` (e,g.,initramfs-6.12.59_1.img, vmlinuz-6.12.59_1).
 
 `quiet loglevel=3` flag reduces boot noise (remove if debugging)
@@ -281,7 +302,7 @@ Note: Package versions are expected to be maintained in /boot/limine.conf
 xbps-reconfigure -fa
 ```
 
-### 16.0 Fix /boot Permissions
+### 17.0 Fix /boot Permissions
 ```shell
 chmod 755 /boot
 chmod 644 /boot/limine.conf
