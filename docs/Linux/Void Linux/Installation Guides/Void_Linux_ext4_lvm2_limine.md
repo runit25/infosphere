@@ -287,44 +287,37 @@ chmod 755 /boot
 chmod 644 /boot/limine.conf
 ```
 
-## Security Hardening
-### 1.0 Harden /tmp
+### 17.0 Harden /tmp
 Edit `/etc/fstab` to include:
 ```shell
 tmpfs    /tmp    tmpfs    rw,relatime,noatime,nosuid,nodev    0 2
 ```
 nano/vim works
 
-### Auto-Clean /tmp on Boot
+### 18.0 Auto-Clean /tmp on Boot
 ```shell
 mkdir -p /etc/tmpfiles.d
 echo 'D /tmp 1777 root root 1d' > /etc/tmpfiles.d/clean-tmp.conf
 ```
 
-### Privacy: Randomize MAC Address
-incomplete
-
-### DNS + Filtering (Recommended)
-incomplete
-
-## Finalize and Reboot
-### Exit chroot:
+### 19.0 Finalize and Reboot
+#### Exit chroot:
 ```shell
 exit
 ```
 
-### Unmount all partitions:
+#### Unmount all partitions:
 ```shell
 umount -R /mnt
 ```
 
-### Reboot into the new system:
+#### Reboot into the new system:
 ```shell
 reboot
 ```
 
-### Post-Install
-#### 1.0 Installation Checks
+## Post-Install
+### 1.0 Installation Checks
 ```shell
 lsblk
 swapon --show
@@ -343,3 +336,10 @@ ln -s /etc/sv/dhcpcd /var/service/
 ln -s /etc/sv/dhcpcd /var/service/
 ln -s /etc/sv/iwd /var/service/
 ```
+
+## Security and Privacy enhancements
+### 1.0 Randomize MAC Address
+Consult: [Void_Linux_Mac_Randomization](https://gitlab.com/runit25/infosphere/-/blob/main/docs/Linux/Void%20Linux/Void%20Linux%20Enhancements/Void_Linux_Mac_Randomization.md)
+
+### 2.0 DNS + Filtering (Recommended)
+incomplete
