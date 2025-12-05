@@ -276,9 +276,15 @@ cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 
 ### 15.0 Get LUKS Partition UUID 
 ```shell
+# Exit chroot
+exit
+
+# Retrieve and remember the UUID for step 16.0
 blkid -s UUID -o value /dev/nvme0n1p2
+
+# Navigate back to chroot
+chroot /mnt /bin/bash
 ```
-Remember the output (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
 
 ### 16.0 Create `/boot/limine.conf`
 ```shell
