@@ -1,7 +1,7 @@
 ---
 title: "Arch Linux Install Guide (LUKS2 + LVM)"
-description: "Installation guide for Arch Linux with full disk encryption (LUKS2 + LVM), limine bootloader, and ext4."
-date: 2025-11-26
+description: "Installation guide for Arch Linux with full disk encryption (LUKS2 + LVM), limine bootloader, ext4, and security hardening."
+date: 2025-12-06
 tags: []
 parent: Arch Linux Guides
 ---
@@ -10,9 +10,9 @@ parent: Arch Linux Guides
 
 <!-- Created by https://gitlab.com/runit25/infosphere -->
 
-Installation includes full disk encryption (LUKS2 + LVM), limine bootloader, ext4, and base system.
+Installation includes full disk encryption (LUKS2 + LVM), limine bootloader, ext4, base system, and security hardening.
 
-**Note:** Substitute /dev/nvme0nX with your corresponding drive (**Example:** "/dev/sda")
+**Note:** Substitute `/dev/nvme0nX` with your corresponding drive (**Example:** `/dev/sda`).
 
 ## Pre-installation
 ### 1.0 Verify UEFI Boot Mode
@@ -24,24 +24,23 @@ If the directory exists you're free to continue.
 
 ### 2.0 Set Keyboard Layout
 ```shell
-localectl set-keymap uk
+loadkeys uk
 ```
-Adjust keymap as needed (e.g., us, de). 
+Adjust accordingly (e.g., us, de).
 
-### 3.0 Connect to the Internet 
-
+### 3.0 Connect to the Internet
 #### Wired (DHCP):
 ```shell
-ping -c 3 archlinux.org
+dhcpcd
 ```
 
-#### Wi-Fi (Using IWD):
+#### Wi-Fi (using iwd)
 ```shell
 iwctl
-device list                # Identify interface (e.g., wlan0)
-station wlan0 scan         # Scan networks
-station wlan0 get-networks # List networks
-station wlan0 connect SSID # Replace SSID with your network name
+device list                  # Identify interface (e.g., wlan0)
+station wlan0 scan           # Scan networks
+station wlan0 get-networks   # List networks
+station wlan0 connect 'SSID' # Replace SSID with your network name
 exit
 ```
 
@@ -54,7 +53,7 @@ ping -c 3 archlinux.org
 ```shell
 lsblk
 ```
-Identify your target disk (e.g., /dev/nvme0n1)
+Identify your target disk (e.g., /dev/nvme0n1).
 
 ### 5.0 Partition the Disk
 ```shell
@@ -81,14 +80,14 @@ select [ Write ]
 |Number | Start (sector) | End (sector) | Size   | Code | Name             |
 |------ | -------------- | ------------ | ------ | ---- | ---------------- |
 |1      | 2048           | 1130495      | 1G     | EF00 | EFI System       |
-|2      | 1130496        | 976773134    | 475.9G | 8309 | Linux Filesystem |
+|2      | 1130496        | 976773134    | 475.9G | 8300 | Linux Filesystem |
 ```
 
-### 6.0 Encrypt Root Partition (LUKS2):
+### 6.0 Encrypt Root Partition (LUKS2)
 ```shell
 cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --iter-time 5000 --key-size 256 --pbkdf argon2id /dev/nvme0n1p2
 ```
-You'll be prompted for a passphrase.
+You'll be prompted to enter a passphrase.
 
 ### 7.0 Open Encrypted Volume
 ```shell
@@ -99,61 +98,68 @@ This exposes the decrypted volume at /dev/mapper/lukspart.
 ### 8.0 Create LVM Physical Volume & Volume Group
 ```shell
 pvcreate /dev/mapper/lukspart
-vgcreate vg /dev/mapper/lukspart
+vgcreate vg0 /dev/mapper/lukspart
 ```
 
 ### 9.0 Create Logical Volumes
 #### Create dedicated logical volumes for better isolation and security:
 ```shell
 # Root: OS and packages (20G)
-lvcreate -L 20G vg -n root
+lvcreate -L 20G vg0 -n root
 
 # /var: logs, caches, databases (20G)
-lvcreate -L 20G vg -n var
+lvcreate -L 20G vg0 -n var
 
-# /tmp: temporary files (8G)
-lvcreate -L 8G vg -n tmp
-
-# Swap: 4G (adjust to match RAM if hibernating)
-lvcreate -L 4G vg -n swap
+# Swap: 4G
+lvcreate -L 4G vg0 -n swap
 
 # /home: remaining space
-lvcreate -l 100%FREE vg -n home
+lvcreate -l 100%FREE vg0 -n home
 ```
-Adjust lvm volumes accordingly. (**Example:** "256G drive Reduce /var to 10G, /tmp to 4G")
+Drives (<128G), reduce /var to 10G.
+
+Note: /tmp is handled securely via tmpfs in RAM (see hardening section).
 
 ### 10.0 Format Filesystems
 ```shell
-mkfs.ext4 -L "Arch Root"   /dev/vg/root
-mkfs.ext4 -L "Arch Var"    /dev/vg/var
-mkfs.ext4 -L "Arch Tmp"    /dev/vg/tmp
-mkfs.ext4 -L "Arch Home"   /dev/vg/home
-mkswap /dev/vg/swap        # Format swap LV
+# Format EFI partition
+mkfs.fat -F32 /dev/nvme0n1p1
+
+# Format the remaining directories:
+mkfs.ext4 -L "Arch_Root" /dev/vg0/root
+mkfs.ext4 -L "Arch_Var"  /dev/vg0/var
+mkfs.ext4 -L "Arch_Home" /dev/vg0/home
+
+# Format swap
+mkswap /dev/vg0/swap
 ```
 
 ### 11.0 Mount Filesystems
 ```shell
-# Mount root first:
-mount /dev/vg/root /mnt
+# Mount root first
+mount /dev/vg0/root /mnt
 
-# Create and mount other directories:
-mkdir -p /mnt/{home,var,tmp,boot}
-mount /dev/vg/home /mnt/home
-mount /dev/vg/var  /mnt/var
-mount /dev/vg/tmp  /mnt/tmp
+# Create the directory structure:
+mkdir -p /mnt/{boot,home,var}
 
-# Format and mount EFI partition:
-mkfs.fat -F32 /dev/nvme0n1p1
+# Mount EFI partition:
 mount /dev/nvme0n1p1 /mnt/boot
+
+# Mount the remaining directories:
+mount /dev/vg0/home /mnt/home
+mount /dev/vg0/var  /mnt/var
+
+# Enable Swap
+swapon /dev/vg0/swap
 ```
-/boot must remain unencrypted for UEFI boot. 
+/boot must remain unencrypted for UEFI boot.
 
 ## Arch Base Installation
 #### Install Essential Packages:
 ```shell
-pacstrap /mnt base linux linux-firmware lvm2 mkinitcpio bash-completion dhcpcd iwd openssh nano
+pacstrap /mnt base linux linux-firmware lvm2 cryptsetup mkinitcpio bash-completion dhcpcd iwd openssh nano
 ```
-openssh (optional) remove unless you use ssh
+Remove openssh if you don't intend to use it.
 
 ## Configure the System
 ### 1.0 Generate fstab
@@ -161,24 +167,9 @@ openssh (optional) remove unless you use ssh
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-### 2.0 Chroot into New System
+### 2.0 Chroot into the new system
 ```shell
 arch-chroot /mnt
-```
-
-#### Expected lsblk output:
-```shell
-# output
-NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
-nvme0n1       259:0    0 476.9G  0 disk  
-├─nvme0n1p1   259:1    0     1G  0 part  /boot
-└─nvme0n1p2   259:2    0 475.9G  0 part  
-  └─lukspart  254:0    0 475.9G  0 crypt 
-    ├─vg-root 254:1    0    20G  0 lvm   /
-    ├─vg-var  254:2    0    20G  0 lvm   /var
-    ├─vg-tmp  254:3    0     8G  0 lvm   /tmp
-    ├─vg-swap 254:4    0     4G  0 lvm
-    └─vg-home 254:5    0 423.9G  0 lvm   /home
 ```
 
 ### 3.0 Set Time and Locale
@@ -192,12 +183,13 @@ hwclock --systohc --utc
 ```shell
 nano /etc/locale.gen
 ```
+vim works as well
 
 #### Generate and set locale (Adjust accordingly):
 ```shell
 locale-gen
 localectl set-locale LANG="en_GB.UTF-8"
-localectl set-locale LC_TIME="en_GB.UTF-8"
+localectl set-locale LC_TIME="en_GB"
 echo "KEYMAP=uk" > /etc/vconsole.conf
 ```
 
@@ -209,203 +201,164 @@ echo myhostname > /etc/hostname
 
 #### Edit /etc/hosts:
 ```shell
-nano /etc/hosts
-```
-
-```shell
+cat > /etc/hosts <<EOF
 127.0.0.1   localhost
 ::1         localhost
-127.0.1.1   myhostname.localdomain   myhostname
+127.0.1.1   myhostname.localdomain myhostname
+EOF
 ```
+Alternatively use nano/vim
 
-### 5.0 Enable Swap
-#### Activate:
-```shell
-swapon /dev/vg/swap
-```
-
-#### Verify:
-```shell
-swapon --show
-```
-
-#### Ensure it's in fstab:
-```shell
-echo '/dev/vg/swap none swap defaults 0 0' >> /etc/fstab
-```
-
-### 6.0 Initramfs Configuration
+### 5.0 Initramfs Configuration
 #### Edit /etc/mkinitcpio.conf:
 ```shell
 nano /etc/mkinitcpio.conf
 ```
+vim works as well
 
-#### Place vfat into MODULES:
-```conf
+```shell
+# Include vfat
 MODULES=(vfat)
-```
 
-#### Replace the systemd hook with udev and sd-vconsole with consolefont and include encrypt, lvm2 (ordering matters):
-```conf
+# Replace systemd with udev and sd-vconsole with consolefont, and add encrypt and lvm2 (ordering matters)
 HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt lvm2 filesystems fsck)
 ```
 
-#### Rebuild initramfs:
-```shell
-mkinitcpio -P
-```
-
-### 7.0 Enable Networking Services
-```shell
-systemctl enable dhcpcd
-systemctl enable iwd.service
-systemctl enable sshd        # Enable if you installed openssh
-```
-
-### 8.0 Install Microcode
-#### For AMD:
+### 6.0 Microcode (CPU-specific)
+#### AMD
 ```shell
 pacman -S amd-ucode
 ```
-
-#### For Intel:
+#### Intel
 ```shell
 pacman -S intel-ucode
 ```
 
-#### Regenerate initramfs to include microcode:
+#### Regenerate initramfs:
 ```shell
-mkinitcpio -p linux
+mkinitcpio -P
 ```
 
-### 9.0 Install Graphics Drivers
-#### Intel/AMD:
+### 7.0 Graphics Drivers
+#### AMD
 ```shell
-pacman -S mesa
+pacman -S mesa-dri mesa-vulkan-radeon lib32-mesa
 ```
 
-#### Enable multilib:
+#### Intel
 ```shell
-`nano /etc/pacman.conf`
+pacman -S mesa-dri xf86-video-intel mesa-vulkan-intel intel-media-driver lib32-mesa
 ```
 
-```conf
+### 8.0 Enable multilib
+#### Edit /etc/pacman.conf:
+```shell
 [multilib]
 Include = /etc/pacman.d/mirrorlist
 ```
-Contains steam, etc.
 
-##### Update:
+#### Then:
 ```shell
-pacman -Syu
+pacman -Sy
 ```
 
-### Required to install AUR packages (optional)
-```shell
-pacman -S binutils make gcc pkg-config fakeroot debugedit git
-```
-
-### 10.0  Set Root Password
+### 9.0 Set Root Password
 ```shell
 passwd
 ```
 
-### 11.0 Add User
+### 10.0 Add User
 ```shell
 useradd -m -G wheel,storage,power -s /bin/bash yourusername
 passwd yourusername
 ```
 
-### 12.0 Install opendoas
+### 11.0 Install opendoas
 ```shell
 pacman -S opendoas
 ```
 
-#### Allow user to run commands as root:
+#### Allow yourusername to run commands as root:
 ```shell
-echo "permit persist yourusername" > /etc/doas.conf
+echo 'permit persist yourusername' > /etc/doas.conf
 chmod 600 /etc/doas.conf
 ```
-persist preserves password authentication for five minutes.
 
-#### Optional: Add sudo alias:
-```shell
-echo "alias sudo=doas" >> /home/yourusername/.bashrc
-```
-
-### 13.0 Install limine
+### 12.0 Install limine
 ```shell
 pacman -S limine
 ```
 
-### 14.0 Install limine Bootloader
+### 13.0 limine Bootloader
 ```shell
 mkdir -p /boot/EFI/BOOT
 cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/
 ```
 
-### 15.0 Get LUKS Partition UUID
+### 14.0 Get LUKS Partition UUID
 ```shell
 blkid -s UUID -o value /dev/nvme0n1p2
 ```
-Remember the output (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
 
-### 16.0 Create /boot/limine.conf
+### 15.0 Create /boot/limine.conf
 ```shell
 nano /boot/limine.conf
 ```
+vim works as well
 
-```conf
+```shell
 timeout: 10
 
-/Arch Linux (linux)
-    protocol: linux
-    path: boot():/vmlinuz-linux
-    module_path: boot():/amd-ucode.img        # Remove if Intel
-    module_path: boot():/intel-ucode.img      # Remove if AMD
-    module_path: boot():/initramfs-linux.img
-    cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
-
-/Arch Linux (linux-fallback)
-    protocol: linux
-    path: boot():/vmlinuz-linux
-    module_path: boot():/amd-ucode.img        # Remove if Intel
-    module_path: boot():/intel-ucode.img      # Remove if AMD
-    module_path: boot():/initramfs-linux-fallback.img
-    cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg/root rw rootfstype=ext4 add_efi_memmap vsyscall=none
+/Arch
+protocol: linux
+path: boot():/vmlinuz-linux
+module_path: boot():/amd-ucode.img        # Delete this line if you're using intel
+module_path: boot():/intel-ucode.img      # Delete this line if you're using amd
+module_path: boot():/initramfs-linux.img
+cmdline: cryptdevice=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:lukspart root=/dev/vg0/root rw rootfstype=ext4 add_efi_memmap vsyscall=none quiet loglevel=3
 ```
-Replace xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx with the actual UUID obtained earlier.
+Replace xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx with the actual UUID obtained from Step 14.0
 
-### 17,0  Fix /boot Permissions
+`quiet loglevel=3` flag reduces boot noise (remove if debugging)
+
+### 16.0 Fix /boot Permissions
 ```shell
 chmod 755 /boot
-chmod 600 /boot/limine.conf
+chmod 644 /boot/limine.conf
 ```
 
-### 18.0 Secure /tmp Mount Options
-```
+### 17.0 Harden /tmp, /var, and /home mount options
+Edit /etc/fstab:
+```shell
 nano /etc/fstab
 ```
+vim works as well
 
-#### Find /tmp and include noatime, nosuid, nodev:
 ```shell
-UUID=example    /tmp    ext4    rw,relatime,noatime,nosuid,nodev    0 2
-```
-Prevents execution, device files, and suid abuse on /tmp
+# /home: no device access
+/dev/vg0/home    /home  ext4  rw,relatime,nodev                0 2
 
-### 18.0 (Optional) Clear /tmp on Boot
+# /var: no exec, suid, or device access
+/dev/vg0/var     /var   ext4  rw,relatime,nodev,noexec,nosuid  0 2
+
+# /tmp: RAM-backed, ephemeral, hardened
+tmpfs            /tmp   tmpfs rw,relatime,noatime,nosuid,nodev,noexec,mode=1777  0 0
+```
+
+### 18.0 Auto-Clean /tmp on Boot
 ```shell
-echo "D /tmp 1777 root root 1d" > /etc/tmpfiles.d/clean-tmp.conf
+mkdir -p /etc/tmpfiles.d
+echo 'D /tmp 1777 root root 1d' > /etc/tmpfiles.d/clean-tmp.conf
 ```
-This uses systemd-tmpfiles to clean /tmp on boot. The 1d means files older than 1 day are deleted. Change to 0 to clear all contents on every boot.
 
-## Privacy: Randomize MAC Address
-Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/docs/Linux/Arch%20Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
+### 19.0 Enable Networking Services
+```shell
+systemctl enable dhcpcd
+systemctl enable iwd.service
+systemctl enable sshd        # Ignore unless you use sshd
+```
 
-##  DNS + Filtering (Recommended)
-incomplete
-
-## Finalize and Reboot
+### 20.0 Finalize and Reboot
 #### Exit chroot:
 ```shell
 exit
@@ -413,7 +366,7 @@ exit
 
 #### Unmount all partitions:
 ```shell
-umount -l /mnt
+umount -R /mnt
 ```
 
 #### Reboot into the new system:
@@ -421,11 +374,28 @@ umount -l /mnt
 reboot
 ```
 
-## Verify Installation
-#### After logging in:
+## Post-Install
+### 1.0 Installation Checks
 ```shell
-lsblk                   # Confirm /var, /tmp, swap LVs
-swapon --show           # Verify swap active
-dmesg | grep -i "crypt" # Confirm LUKS decryption loaded
-cat /boot/limine.conf   # Confirm bootloader config
+lsblk
+swapon --show
+cat /proc/cmdline
+cat /boot/limine.conf
+```
+
+## Security and Privacy Enhancements
+### 1.0 Randomize MAC Address
+Consult: [Arch_Linux_Mac_Randomization](<https://gitlab.com/runit25/infosphere/-/blob/main/docs/Linux/Arch%20Linux/Arch%20Linux%20Enhancements/Arch_Linux_Mac_Randomization.md>)
+
+### 2.0 DNS + Filtering
+incomplete
+
+### 3.0 Kernel Self-Protection
+```shell
+# Prevent kernel pointer leaks
+echo 'kernel.dmesg_restrict = 1' > /etc/sysctl.d/51-dmesg-restrict.conf
+echo 'kernel.kptr_restrict = 2' >> /etc/sysctl.d/51-dmesg-restrict.conf
+
+# Harden ASLR
+echo 'kernel.randomize_va_space = 2' >> /etc/sysctl.d/51-dmesg-restrict.conf
 ```
