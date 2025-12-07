@@ -376,9 +376,14 @@ incomplete
 ### 3.0 Kernel Self-Protection
 ```shell
 # Prevent kernel pointer leaks
-echo 'kernel.dmesg_restrict = 1' > /etc/sysctl.d/51-dmesg-restrict.conf
-echo 'kernel.kptr_restrict = 2' >> /etc/sysctl.d/51-dmesg-restrict.conf
+echo 'kernel.dmesg_restrict = 1' > /etc/sysctl.d/99-hardening.conf
+echo 'kernel.kptr_restrict = 2' >> /etc/sysctl.d/99-hardening.conf
 
 # Harden ASLR
-echo 'kernel.randomize_va_space = 2' >> /etc/sysctl.d/51-dmesg-restrict.conf
+echo 'kernel.randomize_va_space = 2' >> /etc/sysctl.d/99-hardening.conf
 ```
+
+```
+sysctl --system
+```
+Apply the Changes

@@ -344,3 +344,18 @@ Consult: [Void_Linux_Mac_Randomization](https://gitlab.com/runit25/infosphere/-/
 
 ### 2.0 DNS + Filtering (Recommended)
 incomplete
+
+### 3.0 Kernel Self-Protection
+```shell
+# Prevent kernel pointer leaks
+echo 'kernel.dmesg_restrict = 1' > /etc/sysctl.d/99-hardening.conf
+echo 'kernel.kptr_restrict = 2' >> /etc/sysctl.d/99-hardening.conf
+
+# Harden ASLR
+echo 'kernel.randomize_va_space = 2' >> /etc/sysctl.d/99-hardening.conf
+```
+
+```
+sysctl --system
+```
+Apply the Changes
